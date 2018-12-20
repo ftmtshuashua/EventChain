@@ -1,5 +1,7 @@
 package com.lfp.eventtree;
 
+import com.lfp.eventtree.excption.InterruptException;
+
 /**
  * <pre>
  * Tip:
@@ -32,7 +34,7 @@ public abstract class EventChain {
         return this;
     }
 
-    private final ChainObserverManager getChainObserverManager() {
+    protected final ChainObserverManager getChainObserverManager() {
         EventChain first = getFirst();
         if (this == first) {
             if (mChainObserverManager == null) {
@@ -44,12 +46,26 @@ public abstract class EventChain {
         }
     }
 
-    public void addEventChianObserver(EventChianObserver l) {
-        getChainObserverManager().addEventChianObserver(l);
+    public void addEventChainObserver(EventChainObserver l) {
+        getChainObserverManager().addEventChainObserver(l);
+//        EventChain event = getFirst().next;
+//        while (event != null) {
+//            if (event instanceof EventMerge) {
+//                ((EventMerge) event).addDisabilityEventChainObserver(l);
+//            }
+//            event = event.next;
+//        }
     }
 
-    public void removeEventChianObserver(EventChianObserver l) {
-        getChainObserverManager().removeEventChianObserver(l);
+    public void removeEventChainObserver(EventChainObserver l) {
+        getChainObserverManager().removeEventChainObserver(l);
+    /*    EventChain event = getFirst().next;
+        while (event != null) {
+            if (event instanceof EventMerge) {
+                ((EventMerge) event).removeDisabilityEventChainObserver(l);
+            }
+            event = event.next;
+        }*/
     }
 
     public EventChain chain(EventChain chain) {
@@ -112,7 +128,7 @@ public abstract class EventChain {
         if (this == getFirst()) {
             getChainObserverManager().onChainStart();
         }
-
+        getChainObserverManager().onStart(this);
         try {
             call();
         } catch (Throwable e) {
@@ -136,6 +152,10 @@ public abstract class EventChain {
         onError(e);
     }
 
+    protected void interrupt() {
+        error(new InterruptException());
+    }
+
     public boolean isComplete() {
         return (mFlag & FLAG_COMPLETE) != 0;
     }
@@ -150,6 +170,7 @@ public abstract class EventChain {
             lisetener.onComplete();
         }
         getChainObserverManager().onNext(this);
+
 
         if (next != null) {
             next.run();
@@ -176,7 +197,6 @@ public abstract class EventChain {
      * @return
      */
     public static final EventChain create(EventChain... chain) {
-
+        return new EventMerge(chain);
     }
-
 }

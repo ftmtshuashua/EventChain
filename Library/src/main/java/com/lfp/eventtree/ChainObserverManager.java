@@ -14,19 +14,19 @@ import java.util.List;
  * Created by LiFuPing on 2018/12/20 17:40
  * </pre>
  */
-public class ChainObserverManager implements EventChianObserver {
+public class ChainObserverManager implements EventChainObserver {
 
-    List<EventChianObserver> array;
+    List<EventChainObserver> array;
 
     public ChainObserverManager() {
         array = new ArrayList<>();
     }
 
-    public void addEventChianObserver(EventChianObserver l) {
+    public void addEventChainObserver(EventChainObserver l) {
         array.add(l);
     }
 
-    public void removeEventChianObserver(EventChianObserver l) {
+    public void removeEventChainObserver(EventChainObserver l) {
         array.remove(l);
     }
 
@@ -56,8 +56,8 @@ public class ChainObserverManager implements EventChianObserver {
     }
 
 
-    public void map(Action1<EventChianObserver> action1) {
-        Iterator<EventChianObserver> array = this.array.iterator();
+    public void map(Action1<EventChainObserver> action1) {
+        Iterator<EventChainObserver> array = this.array.iterator();
         while (array.hasNext()) {
             action1.call(array.next());
         }

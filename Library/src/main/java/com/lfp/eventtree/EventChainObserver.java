@@ -10,7 +10,7 @@ package com.lfp.eventtree;
  * Created by LiFuPing on 2018/12/20 16:55
  * </pre>
  */
-public interface EventChianObserver {
+public interface EventChainObserver {
     /*当事件链开始*/
     void onChainStart();
 
