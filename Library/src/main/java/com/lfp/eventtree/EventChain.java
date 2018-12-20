@@ -168,4 +168,15 @@ public abstract class EventChain {
         getChainObserverManager().onChainComplete();
     }
 
+
+    /**
+     * 创建一个链条事件
+     *
+     * @param chain
+     * @return
+     */
+    public static final EventChain create(EventChain... chain) {
+
+    }
+
 }

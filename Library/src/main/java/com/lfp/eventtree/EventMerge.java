@@ -1,5 +1,7 @@
 package com.lfp.eventtree;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * <pre>
  * Tip:
@@ -15,24 +17,30 @@ public class EventMerge extends EventChain {
 
     public EventMerge(EventChain... chains) {
         if (chains != null) {
-            this.mMerge = new EventChain[chains.length];
+            this.mMerge = chains;
             for (int i = 0; i < chains.length; i++) {
-                this.mMerge[i] = chains[i].getLast();
-
+                chains[i].removeEventChianObserver(mEventChianObserver);
             }
         }
     }
 
     @Override
     protected void call() throws Throwable {
-
+        if (this.mMerge == null || this.mMerge.length == 0) {
+            next();
+        } else {
+            for (int i = 0; i < this.mMerge.length; i++) {
+                this.mMerge[i].start();
+            }
+        }
     }
 
-    private static final class ChianObserver implements EventChianObserver {
+    EventChianObserver mEventChianObserver = new EventChianObserver() {
+        AtomicInteger count = new AtomicInteger(0);
 
         @Override
         public void onChainStart() {
-
+            count.incrementAndGet();
         }
 
         @Override
@@ -52,8 +60,11 @@ public class EventMerge extends EventChain {
 
         @Override
         public void onChainComplete() {
-
+            count.decrementAndGet();
+            if (count.intValue() == 0) {
+                next();
+            }
         }
-    }
+    };
 
 }
