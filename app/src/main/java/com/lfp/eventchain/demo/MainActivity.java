@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
                 .chain(new DemoEvent("小明传球").chain(new DemoEvent("666接住并传给了小红")).chain(new DemoEvent("小红接住准备传给小明").setDynamic(true)))
                 .merge(new DemoEvent("666见状赶紧溜了"), new DemoEvent("小红见状也溜了"))
                 .chain(new DemoEvent("可怜的小明，终~"));
-        chain.start();
 
 
         chain.addEventChainObserver(mEventObserver);

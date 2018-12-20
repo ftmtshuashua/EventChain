@@ -36,6 +36,9 @@
             android:text="小明欢乐多" />
     </LinearLayout>
 
-
+    <TextView
+        android:layout_width="match_parent"
+        android:id="@+id/view_Info"
+        android:layout_height="match_parent" />
 
 </android.support.constraint.ConstraintLayout>
