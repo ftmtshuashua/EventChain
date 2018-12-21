@@ -47,6 +47,16 @@ public class EventMerge extends EventChain {
         super.onInterrup();
     }
 
+    @Override
+    protected void onEnd() {
+        if (mMerge != null) {
+            for (int i = 0; i < mMerge.length; i++) {
+                mMerge[i].complete();
+            }
+        }
+        super.onEnd();
+    }
+
     EventChainObserver mEventChianObserver = new EventChainObserver() {
         AtomicInteger count = new AtomicInteger(0);
         MultiException exception;

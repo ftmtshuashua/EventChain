@@ -1,7 +1,5 @@
 package com.lfp.eventtree;
 
-import com.lfp.eventtree.excption.CompleteException;
-
 /**
  * <pre>
  * Tip:
@@ -17,12 +15,16 @@ public abstract class EventChain {
     private static final int FLAG_STARTED = 0x1;
     /*中断事件，整个链条都会停止下发后续事件*/
     private static final int FLAG_INTERRUPT = 0x2;
+    /*中断事件，跳过后面所有事件直接完成 */
+    private static final int FLAG_END = 0x4;
     /*事件执行失败，不执行后续操作*/
     private static final int FLAG_ERROR = 0x10;
     /*事件执行成功，执行后续操作*/
     private static final int FLAG_NEXT = 0x20;
     /*事件执行完成*/
     private static final int FLAG_COMPLETE = 0xF0;
+
+
     private int mFlag;
 
     private EventChain pre;
@@ -144,7 +146,14 @@ public abstract class EventChain {
      * 跳过后续事件，直接完成事件链
      */
     public final void complete() {
-        error(new CompleteException());
+        getFirst().onEnd();
+    }
+
+    protected void onEnd() {
+        mFlag |= FLAG_END;
+        if (next != null) {
+            next.onEnd();
+        }
     }
 
     /**
@@ -170,6 +179,11 @@ public abstract class EventChain {
         return (mFlag & FLAG_COMPLETE) != 0;
     }
 
+    /*中断但是允许完成*/
+    private boolean isInterruptAllowComplete() {
+        return (mFlag & FLAG_END) > 0;
+    }
+
     private final void onNext() {
         if (isInterrupt()) return;
 
@@ -184,7 +198,7 @@ public abstract class EventChain {
         getChainObserverManager().onNext(this);
 
 
-        if (next != null) {
+        if (next != null && !isInterruptAllowComplete()) {
             next.run();
         } else {
             getChainObserverManager().onChainComplete();
