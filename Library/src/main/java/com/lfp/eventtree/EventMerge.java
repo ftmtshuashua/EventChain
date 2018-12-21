@@ -16,10 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class EventMerge extends EventChain {
     EventChain[] mMerge;
-/*
-
-    HashMap<EventChainObserver, DisabilityEventChainObserver> mObserverMap;
-*/
 
     public EventMerge(EventChain... chains) {
         if (chains != null) {
@@ -29,32 +25,6 @@ public class EventMerge extends EventChain {
             }
         }
     }
-/*
-
-    protected void addDisabilityEventChainObserver(EventChainObserver observer) {
-        if (mMerge != null) {
-            if (mObserverMap == null) {
-                mObserverMap = new HashMap<>();
-            }
-            DisabilityEventChainObserver disabilityEventChainObserver = new DisabilityEventChainObserver(observer);
-            mObserverMap.put(observer, disabilityEventChainObserver);
-            for (int i = 0; i < mMerge.length; i++) {
-                mMerge[i].addEventChainObserver(disabilityEventChainObserver);
-            }
-        }
-    }
-
-    protected void removeDisabilityEventChainObserver(EventChainObserver observer) {
-        if (mMerge != null && mObserverMap != null) {
-            DisabilityEventChainObserver disabilityEventChainObserver = mObserverMap.get(observer);
-            if (disabilityEventChainObserver != null) {
-                for (int i = 0; i < mMerge.length; i++) {
-                    mMerge[i].removeEventChainObserver(disabilityEventChainObserver);
-                }
-            }
-        }
-    }
-*/
 
     @Override
     protected void call() throws Throwable {
@@ -65,6 +35,16 @@ public class EventMerge extends EventChain {
                 this.mMerge[i].start();
             }
         }
+    }
+
+    @Override
+    protected void onInterrup() {
+        if (mMerge != null) {
+            for (int i = 0; i < mMerge.length; i++) {
+                mMerge[i].interrupt();
+            }
+        }
+        super.onInterrup();
     }
 
     EventChainObserver mEventChianObserver = new EventChainObserver() {

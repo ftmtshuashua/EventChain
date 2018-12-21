@@ -1,7 +1,5 @@
 package com.lfp.eventtree;
 
-import com.lfp.eventtree.excption.InterruptException;
-
 /**
  * <pre>
  * Tip:
@@ -15,6 +13,8 @@ public abstract class EventChain {
 
     /*标记已经开始运行了*/
     private static final int FLAG_STARTED = 0x1;
+    /*中断事件，整个链条都会停止下发后续事件*/
+    private static final int FLAG_INTERRUPT = 0x2;
     /*事件执行失败，不执行后续操作*/
     private static final int FLAG_ERROR = 0x10;
     /*事件执行成功，执行后续操作*/
@@ -48,24 +48,10 @@ public abstract class EventChain {
 
     public void addEventChainObserver(EventChainObserver l) {
         getChainObserverManager().addEventChainObserver(l);
-//        EventChain event = getFirst().next;
-//        while (event != null) {
-//            if (event instanceof EventMerge) {
-//                ((EventMerge) event).addDisabilityEventChainObserver(l);
-//            }
-//            event = event.next;
-//        }
     }
 
     public void removeEventChainObserver(EventChainObserver l) {
         getChainObserverManager().removeEventChainObserver(l);
-    /*    EventChain event = getFirst().next;
-        while (event != null) {
-            if (event instanceof EventMerge) {
-                ((EventMerge) event).removeDisabilityEventChainObserver(l);
-            }
-            event = event.next;
-        }*/
     }
 
     public EventChain chain(EventChain chain) {
@@ -152,8 +138,19 @@ public abstract class EventChain {
         onError(e);
     }
 
-    protected void interrupt() {
-        error(new InterruptException());
+    public final void interrupt() {
+        getFirst().onInterrup();
+    }
+
+    protected void onInterrup() {
+        mFlag |= FLAG_INTERRUPT;
+        if (next != null) {
+            next.onInterrup();
+        }
+    }
+
+    public boolean isInterrupt() {
+        return (mFlag & FLAG_INTERRUPT) > 0;
     }
 
     public boolean isComplete() {
@@ -161,6 +158,8 @@ public abstract class EventChain {
     }
 
     private final void onNext() {
+        if (isInterrupt()) return;
+
         mFlag |= FLAG_NEXT;
         if (!isComplete()) {
             throw new IllegalStateException("The event is not complete!");
@@ -180,6 +179,8 @@ public abstract class EventChain {
     }
 
     private final void onError(Throwable e) {
+        if (isInterrupt()) return;
+
         mFlag |= FLAG_ERROR;
         if (lisetener != null) {
             lisetener.onError(e);

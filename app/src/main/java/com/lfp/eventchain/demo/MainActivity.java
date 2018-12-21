@@ -1,7 +1,6 @@
 package com.lfp.eventchain.demo;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 
@@ -10,6 +9,11 @@ import com.lfp.eventtree.EventChainObserver;
 import com.lfp.eventtree.OnEventLisetener;
 
 import java.text.MessageFormat;
+
+import androidx.appcompat.app.AppCompatActivity;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,7 +24,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mTV_Info = findViewById(R.id.view_Info);
-
     }
 
     /*显示日志*/
@@ -30,33 +33,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void appendTop(String test) {
+        cancel(null);
         mTV_Info.setText(test);
         mTV_Info.append("\n");
     }
 
+    EventChain mChain;
+
+    public void cancel(View v) {
+        if (mChain != null) mChain.interrupt();
+    }
+
     public void test1(View v) {
         appendTop("事件链");
-        EventChain event = new DemoEvent("Event 1")
+        mChain = new DemoEvent("Event 1")
                 .chain(new DemoEvent("Event 2"))
                 .chain(new DemoEvent("Event 3")).setOnEventLisetener(new EventLisenter("Event 3"))//OnEventLisetener只能监听一个事件
 //                .chain(new DemoEvent("Event 3").setOnEventLisetener(SingleEvent)) //与上面一句等效
                 .chain(new DemoEvent("Event 4"))
                 .chain(new DemoEvent("Event 5"));
-        event.addEventChainObserver(mEventObserver);//EventChainObserver监听整个链中所有事件
-        event.start();
+        mChain.addEventChainObserver(mEventObserver);//EventChainObserver监听整个链中所有事件
+        mChain.start();
     }
 
     public void test2(View v) {
         appendTop("并发事件");
-        EventChain event = EventChain.create(
+        mChain = EventChain.create(
                 new DemoEvent("Event 1")
                 , new DemoEvent("Event 2")
                 , new DemoEvent("Event 3")
                 , new DemoEvent("Event 4")
                 , new DemoEvent("Event 5")
         );
-        event.setOnEventLisetener(new EventLisenter("并发事件"));//OnEventLisetener只能监听一个事件
-        event.start();
+        mChain.setOnEventLisetener(new EventLisenter("并发事件"));//OnEventLisetener只能监听一个事件
+        mChain.start();
     }
 
     public void test3(View v) {
@@ -68,15 +78,15 @@ public class MainActivity extends AppCompatActivity {
         appendTop(sb.toString());
 
 
-        EventChain chain = new DemoEvent("放学回家")
+        mChain = new DemoEvent("放学回家")
                 .merge(new DemoEvent("小明骑车"), new DemoEvent("666跑步"))
-                .chain(new DemoEvent("小明传球").chain(new DemoEvent("666接住并传给了小红")).chain(new DemoEvent("小红接住准备传给小明").setDynamic(true)))
+                .chain(new DemoEvent("小明传球").chain(new DemoEvent("666接住并传给了小红")).chain(new DemoEvent("小红接住准备传给小明").setTestDynamic(true)))
                 .merge(new DemoEvent("666见状赶紧溜了"), new DemoEvent("小红见状也溜了"))
                 .chain(new DemoEvent("可怜的小明，终~"));
 
 
-        chain.addEventChainObserver(mEventObserver);
-        chain.start();
+        mChain.addEventChainObserver(mEventObserver);
+        mChain.start();
     }
 
 
@@ -107,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
             appendMsg(MessageFormat.format("{1} 监听器:{0}", "onComplete()", info));
         }
     }
-
 
 
     EventChainObserver mEventObserver = new EventChainObserver() {
@@ -144,8 +153,8 @@ public class MainActivity extends AppCompatActivity {
     private class DemoEvent extends EventChain {
         String info;
         long delay = 100; //默认事件执行时间
-        boolean isDynamic; //是否增加动态事件添加功能
-        boolean isInterrupt = false; //是否关闭事件链
+        boolean testDynamic; //是否增加动态事件添加功能
+        boolean testInterrupt = false; //是否关闭事件链
 
         public DemoEvent(String info) {
             this.info = info;
@@ -164,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
                 }
+                if (isInterrupt()) return;
                 模拟线程时间处理结束();
             });
         }
@@ -172,16 +182,15 @@ public class MainActivity extends AppCompatActivity {
             ThreadHelper.main(() -> {
                 appendMsg(MessageFormat.format("{0}:结束  耗时：{1,number,0}ms", info, delay));
                 模拟动态事件添加();
-                if (isInterrupt) { //是否强制退出事件链
+                if (testInterrupt) { //是否强制退出事件链
                     interrupt();
-                } else {
-                    next();
                 }
+                next();
             });
         }
 
         private void 模拟动态事件添加() {
-            if (!isDynamic) return;
+            if (!testDynamic) return;
             switch ((int) (Math.random() * 3)) {
                 case 0:
                     模拟动态事件_小明妈妈来了();
@@ -195,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-            isDynamic = false;
+            testDynamic = false;
         }
 
         @Override
@@ -207,13 +216,13 @@ public class MainActivity extends AppCompatActivity {
          * 将该节点设置为中断动作
          */
         public EventChain setTestInterrupt(boolean is) {
-            isInterrupt = is;
+            testInterrupt = is;
             return this;
         }
 
         /*动态事件添加，模拟小明的概率事件*/
-        public EventChain setDynamic(boolean isDynamic) {
-            this.isDynamic = isDynamic;
+        public EventChain setTestDynamic(boolean isDynamic) {
+            this.testDynamic = isDynamic;
             return this;
         }
 
