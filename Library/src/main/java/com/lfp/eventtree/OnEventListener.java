@@ -10,7 +10,7 @@ package com.lfp.eventtree;
  * Created by LiFuPing on 2018/12/20 16:55
  * </pre>
  */
-public interface OnEventLisetener {
+public interface OnEventListener {
 
     /*事件开始*/
     void onStart();

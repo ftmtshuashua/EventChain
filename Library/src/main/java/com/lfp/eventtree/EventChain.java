@@ -25,12 +25,12 @@ public abstract class EventChain {
 
     private EventChain pre;
     private EventChain next;
-    private OnEventLisetener lisetener;
+    private OnEventListener listener;
 
     private ChainObserverManager mChainObserverManager;/*链条观察者 ，一个链条中只允许存在一个管理器 ,在链条的顶部*/
 
-    public EventChain setOnEventLisetener(OnEventLisetener l) {
-        this.lisetener = l;
+    public EventChain setOnEventListener(OnEventListener l) {
+        this.listener = l;
         return this;
     }
 
@@ -108,8 +108,8 @@ public abstract class EventChain {
             throw new IllegalStateException("The event is complete!");
         }
         mFlag |= FLAG_STARTED;
-        if (lisetener != null) {
-            lisetener.onStart();
+        if (listener != null) {
+            listener.onStart();
         }
         if (this == getFirst()) {
             getChainObserverManager().onChainStart();
@@ -164,9 +164,9 @@ public abstract class EventChain {
         if (!isComplete()) {
             throw new IllegalStateException("The event is not complete!");
         }
-        if (lisetener != null) {
-            lisetener.onNext();
-            lisetener.onComplete();
+        if (listener != null) {
+            listener.onNext();
+            listener.onComplete();
         }
         getChainObserverManager().onNext(this);
 
@@ -182,9 +182,9 @@ public abstract class EventChain {
         if (isInterrupt()) return;
 
         mFlag |= FLAG_ERROR;
-        if (lisetener != null) {
-            lisetener.onError(e);
-            lisetener.onComplete();
+        if (listener != null) {
+            listener.onError(e);
+            listener.onComplete();
         }
         getChainObserverManager().onError(this, e);
         getChainObserverManager().onChainComplete();

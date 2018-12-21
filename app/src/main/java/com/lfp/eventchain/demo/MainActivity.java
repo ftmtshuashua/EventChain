@@ -6,14 +6,11 @@ import android.widget.TextView;
 
 import com.lfp.eventtree.EventChain;
 import com.lfp.eventtree.EventChainObserver;
-import com.lfp.eventtree.OnEventLisetener;
+import com.lfp.eventtree.OnEventListener;
 
 import java.text.MessageFormat;
 
 import androidx.appcompat.app.AppCompatActivity;
-import io.reactivex.Observable;
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
         appendTop("事件链");
         mChain = new DemoEvent("Event 1")
                 .chain(new DemoEvent("Event 2"))
-                .chain(new DemoEvent("Event 3")).setOnEventLisetener(new EventLisenter("Event 3"))//OnEventLisetener只能监听一个事件
-//                .chain(new DemoEvent("Event 3").setOnEventLisetener(SingleEvent)) //与上面一句等效
+                .chain(new DemoEvent("Event 3")).setOnEventListener(new EventLisenter("Event 3"))//OnEventLisetener只能监听一个事件
+//                .chain(new DemoEvent("Event 3").setOnEventListener(SingleEvent)) //与上面一句等效
                 .chain(new DemoEvent("Event 4"))
                 .chain(new DemoEvent("Event 5"));
         mChain.addEventChainObserver(mEventObserver);//EventChainObserver监听整个链中所有事件
@@ -65,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 , new DemoEvent("Event 4")
                 , new DemoEvent("Event 5")
         );
-        mChain.setOnEventLisetener(new EventLisenter("并发事件"));//OnEventLisetener只能监听一个事件
+        mChain.setOnEventListener(new EventLisenter("并发事件"));//OnEventLisetener只能监听一个事件
         mChain.start();
     }
 
@@ -90,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    class EventLisenter implements OnEventLisetener {
+    class EventLisenter implements OnEventListener {
         String info;
 
         public EventLisenter(String info) {
