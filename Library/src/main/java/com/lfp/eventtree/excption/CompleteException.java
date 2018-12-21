@@ -10,8 +10,8 @@ package com.lfp.eventtree.excption;
  * Created by LiFuPing on 2018/12/20 21:38
  * </pre>
  */
-public class InterruptException extends EventException {
-    public InterruptException() {
-        super("The chain is interrupt!");
+public class CompleteException extends EventException {
+    public CompleteException() {
+        super("该链被手动结束!");
     }
 }

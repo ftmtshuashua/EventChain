@@ -13,8 +13,12 @@ import java.util.List;
  * Created by LiFuPing on 2018/12/20 23:20
  * </pre>
  */
-public class MultiException extends InterruptException {
+public class MultiException extends EventException {
     List<Throwable> array;
+
+    public MultiException() {
+        super("包含多个错误，请调用getArray()查看详细信息!");
+    }
 
 
     public void add(Throwable t) {

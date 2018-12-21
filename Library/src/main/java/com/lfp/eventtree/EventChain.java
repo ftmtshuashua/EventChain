@@ -1,5 +1,7 @@
 package com.lfp.eventtree;
 
+import com.lfp.eventtree.excption.CompleteException;
+
 /**
  * <pre>
  * Tip:
@@ -138,9 +140,20 @@ public abstract class EventChain {
         onError(e);
     }
 
+    /**
+     * 跳过后续事件，直接完成事件链
+     */
+    public final void complete() {
+        error(new CompleteException());
+    }
+
+    /**
+     * 中断整个事件链，调用该方法之后后续事件将停止
+     */
     public final void interrupt() {
         getFirst().onInterrup();
     }
+
 
     protected void onInterrup() {
         mFlag |= FLAG_INTERRUPT;
