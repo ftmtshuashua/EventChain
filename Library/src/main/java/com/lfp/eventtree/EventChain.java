@@ -142,6 +142,7 @@ public abstract class EventChain {
         onError(e);
     }
 
+
     /**
      * 跳过后续事件，直接完成事件链
      */
@@ -163,12 +164,15 @@ public abstract class EventChain {
         getFirst().onInterrup();
     }
 
-
     protected void onInterrup() {
         mFlag |= FLAG_INTERRUPT;
         if (next != null) {
             next.onInterrup();
         }
+    }
+
+    public final boolean isStarted() {
+        return (mFlag & FLAG_STARTED) > 0;
     }
 
     public boolean isInterrupt() {
