@@ -39,7 +39,7 @@ public abstract class EventChain {
     }
 
     protected final ChainObserverManager getChainObserverManager() {
-        EventChain first = getFirst();
+        EventChain first = getPre();
         if (this == first) {
             if (mChainObserverManager == null) {
                 mChainObserverManager = new ChainObserverManager();
@@ -60,8 +60,8 @@ public abstract class EventChain {
 
     public EventChain chain(EventChain chain) {
         if (chain == null) return this;
-        final EventChain first = chain.getFirst();
-        final EventChain last = chain.getLast();
+        final EventChain first = chain.getPre();
+        final EventChain last = chain.getNext();
         first.pre = this;
         last.next = this.next;
         if (last.next != null) {
@@ -77,7 +77,7 @@ public abstract class EventChain {
     }
 
     /*获得当前链条的头，注意EventMerge会生成独立的链条*/
-    public final EventChain getFirst() {
+    public final EventChain getPre() {
         EventChain first = this;
         while (first.pre != null) {
             first = first.pre;
@@ -86,7 +86,7 @@ public abstract class EventChain {
     }
 
     /*获得当前链条的尾，注意EventMerge会生成独立的链条*/
-    public final EventChain getLast() {
+    public final EventChain getNext() {
         EventChain last = this;
         while (last.next != null) {
             last = last.next;
@@ -95,11 +95,11 @@ public abstract class EventChain {
     }
 
     public final void start() {
-        if ((getFirst().mFlag & FLAG_STARTED) != 0) {
+        if ((getPre().mFlag & FLAG_STARTED) != 0) {
             throw new IllegalStateException("The event is started,");
         }
 
-        EventChain event = getFirst();
+        EventChain event = getPre();
         if (this == event) {
             run();
         } else {
@@ -115,7 +115,7 @@ public abstract class EventChain {
         if (listener != null) {
             listener.onStart();
         }
-        if (this == getFirst()) {
+        if (this == getPre()) {
             getChainObserverManager().onChainStart();
         }
         getChainObserverManager().onStart(this);
@@ -147,7 +147,7 @@ public abstract class EventChain {
      * 跳过后续事件，直接完成事件链
      */
     public final void complete() {
-        getFirst().onEnd();
+        getPre().onEnd();
     }
 
     protected void onEnd() {
@@ -161,7 +161,7 @@ public abstract class EventChain {
      * 中断整个事件链，调用该方法之后后续事件将停止
      */
     public final void interrupt() {
-        getFirst().onInterrup();
+        getPre().onInterrup();
     }
 
     protected void onInterrup() {
