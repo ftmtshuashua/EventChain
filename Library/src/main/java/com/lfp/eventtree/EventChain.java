@@ -50,12 +50,14 @@ public abstract class EventChain {
         }
     }
 
-    public void addEventChainObserver(EventChainObserver l) {
+    public EventChain addEventChainObserver(EventChainObserver l) {
         getChainObserverManager().addEventChainObserver(l);
+        return this;
     }
 
-    public void removeEventChainObserver(EventChainObserver l) {
+    public EventChain removeEventChainObserver(EventChainObserver l) {
         getChainObserverManager().removeEventChainObserver(l);
+        return this;
     }
 
     public EventChain chain(EventChain chain) {
