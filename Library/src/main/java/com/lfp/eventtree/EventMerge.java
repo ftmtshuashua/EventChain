@@ -7,7 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * <pre>
  * Tip:
- *      合并数据并发请求
+ *      合并数据并发请求，同时执行数据集中的事件链，当所有事件链执行完成之后这个并发事件结束.
+ *      当它被插入到一个事件链中会已类似多条分支的形式存在,当所有分支执行结束后才会回到它所插入的事件链上
  *
  * Function:
  *
@@ -57,7 +58,7 @@ public class EventMerge extends EventChain {
         super.onEnd();
     }
 
-    EventChainObserver mEventChianObserver = new EventChainObserver() {
+    private EventChainObserver mEventChianObserver = new EventChainObserver() {
         AtomicInteger count = new AtomicInteger(0);
         MultiException exception;
 

@@ -17,7 +17,7 @@ public class MultiException extends EventException {
     List<Throwable> array;
 
     public MultiException() {
-        super("包含多个错误，请调用getArray()查看详细信息!");
+        super("包含多个错误，请使用 MultiException.getArray()查看详细信息!");
     }
 
 
