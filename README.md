@@ -9,6 +9,19 @@
 
 >源生Java实现
 
+## 组件的拓展
+1.覆写[call()]()方法实现业务逻辑
+
+2.如果业务执行完成并且没有出错执行[next()]()方法进行后续流程
+
+3.如果业务执行错误请调用[error(Throwable e)]()方法抛出异常，并且结束事件链
+
+* 通常以上方法就能构建一个业务处理链
+* [complete()]()和[interrupt()]()方法都能中断链条，[complete()]()会回调complete()方法，[interrupt()]()之后的左右事件都不会被调用
+
+
+
+
 ## 配置依赖
 
 在项目的build.gradle中添加
@@ -25,18 +38,6 @@ dependencies {
     implementation 'com.github.ftmtshuashua:EventChain:version'
 }
 ```
-
-
-## 组件的拓展
-1.覆写[call()]()方法实现业务逻辑
-
-2.如果业务执行完成并且没有出错执行[next()]()方法进行后续流程
-
-3.如果业务执行错误请调用[error(Throwable e)]()方法抛出异常，并且结束事件链
-
-* 通常以上方法就能构建一个业务处理链
-* [complete()]()和[interrupt()]()方法都能中断链条，[complete()]()会回调complete()方法，[interrupt()]()之后的左右事件都不会被调用
-
 
 
 ## LICENSE
