@@ -2,6 +2,8 @@ package com.lfp.eventtree;
 
 import com.lfp.eventtree.excption.MultiException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -20,10 +22,16 @@ public class EventMerge extends EventChain {
 
     public EventMerge(EventChain... chains) {
         if (chains != null) {
-            this.mMerge = chains;
+            List<EventChain> array = new ArrayList<>();
             for (int i = 0; i < chains.length; i++) {
-                chains[i].addEventChainObserver(mEventChianObserver);
+                EventChain item = chains[i];
+                if (item != null) {
+                    item.addEventChainObserver(mEventChianObserver);
+                    array.add(item);
+                }
             }
+            mMerge = new EventChain[array.size()];
+            array.toArray(mMerge);
         }
     }
 
