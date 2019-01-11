@@ -31,6 +31,7 @@ public abstract class EventChain {
     private EventChain pre;
     private EventChain next;
     private OnEventListener mOnEventListener;
+    private OnEventListenerManager mOnEventListenerManager;
     private OnEventCompleteListener mOnEventCompleteListener;
     private OnEventStartListener mOnEventStartListener;
 
@@ -88,6 +89,23 @@ public abstract class EventChain {
      */
     public EventChain removeEventChainObserver(EventChainObserver l) {
         getChainObserverManager().removeEventChainObserver(l);
+        return this;
+    }
+
+    /**
+     * 添加事件监听器
+     */
+    public EventChain addOnEventListener(OnEventListener l) {
+        if (mOnEventListenerManager == null) mOnEventListenerManager = new OnEventListenerManager();
+        mOnEventListenerManager.addOnEventListener(l);
+        return this;
+    }
+
+    /**
+     * 移除事件监听器
+     */
+    public EventChain removeOnEventListener(OnEventListener l) {
+        if (mOnEventListenerManager != null) mOnEventListenerManager.removeOnEventListener(l);
         return this;
     }
 
@@ -181,6 +199,7 @@ public abstract class EventChain {
             throw new IllegalStateException("The event is complete!");
         }
         mFlag |= FLAG_STARTED;
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onStart();
         if (mOnEventStartListener != null) mOnEventStartListener.onStart();
         if (mOnEventListener != null) mOnEventListener.onStart();
         if (this == getFirst()) {
@@ -288,10 +307,10 @@ public abstract class EventChain {
         if (!isComplete()) {
             throw new IllegalStateException("The event is not complete!");
         }
-        if (mOnEventListener != null) {
-            mOnEventListener.onNext();
-            mOnEventListener.onComplete();
-        }
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onNext();
+        if (mOnEventListener != null) mOnEventListener.onNext();
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
+        if (mOnEventListener != null) mOnEventListener.onComplete();
         if (mOnEventCompleteListener != null) mOnEventCompleteListener.onComplete();
         getChainObserverManager().onNext(this);
 
@@ -308,11 +327,12 @@ public abstract class EventChain {
         if (isInterrupt()) return;
 
         mFlag |= FLAG_ERROR;
-        if (mOnEventListener != null) {
-            mOnEventListener.onError(e);
-            mOnEventListener.onComplete();
-        }
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onError(e);
+        if (mOnEventListener != null) mOnEventListener.onError(e);
         getChainObserverManager().onError(this, e);
+
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
+        if (mOnEventListener != null) mOnEventListener.onComplete();
         if (mOnEventCompleteListener != null) mOnEventCompleteListener.onComplete();
         getChainObserverManager().onChainComplete();
     }
