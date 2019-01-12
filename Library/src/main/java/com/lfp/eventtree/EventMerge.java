@@ -49,23 +49,23 @@ public class EventMerge extends EventChain {
     }
 
     @Override
-    protected void onInterrup() {
+    protected void onInterrupt() {
         if (mMerge != null) {
             for (int i = 0; i < mMerge.length; i++) {
                 mMerge[i].interrupt();
             }
         }
-        super.onInterrup();
+        super.onInterrupt();
     }
 
     @Override
-    protected void onEnd() {
+    protected void onComplete() {
         if (mMerge != null) {
             for (int i = 0; i < mMerge.length; i++) {
                 mMerge[i].complete();
             }
         }
-        super.onEnd();
+        super.onComplete();
     }
 
     private EventChainObserver mEventChianObserver = new EventChainObserver() {

@@ -186,12 +186,19 @@ public abstract class EventChain {
             getChainObserverManager().onChainStart();
         }
         getChainObserverManager().onStart(this);
+        onStart();
         try {
             call();
         } catch (Throwable e) {
-            e.printStackTrace();
             error(e);
         }
+    }
+
+    /**
+     * 当事件开始执行
+     */
+    protected void onStart() {
+
     }
 
     /**
@@ -223,33 +230,33 @@ public abstract class EventChain {
      * 跳过后续事件，直接完成事件链
      */
     public final void complete() {
-        getFirst().onEnd();
+        getFirst().onComplete();
     }
 
     /**
      * 中断整个事件链，调用该方法之后后续所有事件和回调将停止
      */
     public final void interrupt() {
-        getFirst().onInterrup();
+        getFirst().onInterrupt();
     }
 
     /**
      * 当该事件完成，检查时候有后续事件，并执行之后的事件
      */
-    protected void onEnd() {
+    protected void onComplete() {
         mFlag |= FLAG_END;
         if (next != null) {
-            next.onEnd();
+            next.onComplete();
         }
     }
 
     /**
      * 当该事件被终止，将立即停止当前时候的后续操作和回调
      */
-    protected void onInterrup() {
+    protected void onInterrupt() {
         mFlag |= FLAG_INTERRUPT;
         if (next != null) {
-            next.onInterrup();
+            next.onInterrupt();
         }
     }
 

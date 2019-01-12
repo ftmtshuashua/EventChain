@@ -6,6 +6,7 @@ import android.widget.TextView;
 
 import com.lfp.eventtree.EventChain;
 import com.lfp.eventtree.EventChainObserver;
+import com.lfp.eventtree.EventDelay;
 import com.lfp.eventtree.OnEventListener;
 
 import java.text.MessageFormat;
@@ -48,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
                 .chain(new DemoEvent("Event 3")).setOnEventListener(new EventLisenter("Event 3"))//OnEventLisetener只能监听一个事件
 //                .chain(new DemoEvent("Event 3").setOnEventListener(SingleEvent)) //与上面一句等效
                 .chain(new DemoEvent("Event 4"))
+                .chain(new EventDelay(() -> {
+                    appendMsg("------- 延时创建事件-------");
+                    return new DemoEvent("这是延时创建的事件");
+                }))
                 .chain(new DemoEvent("Event 5"));
         mChain.addEventChainObserver(mEventObserver);//EventChainObserver监听整个链中所有事件
         mChain.start();
