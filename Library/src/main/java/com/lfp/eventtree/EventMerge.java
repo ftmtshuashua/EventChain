@@ -30,8 +30,10 @@ public class EventMerge extends EventChain {
                     array.add(item);
                 }
             }
-            mMerge = new EventChain[array.size()];
-            array.toArray(mMerge);
+            if (!array.isEmpty()) {
+                mMerge = new EventChain[array.size()];
+                array.toArray(mMerge);
+            }
         }
     }
 

@@ -32,10 +32,7 @@ public abstract class EventChain {
     private EventChain next;
     private OnEventListener mOnEventListener;
     private OnEventListenerManager mOnEventListenerManager;
-    private OnEventCompleteListener mOnEventCompleteListener;
-    private OnEventStartListener mOnEventStartListener;
-
-    private ChainObserverManager mChainObserverManager;/*链条观察者 ，一个链条中只允许存在一个管理器 ,在链条的顶部*/
+    private EventChainObserverManager mChainObserverManager;/*链条观察者 ，一个链条中只允许存在一个管理器 ,在链条的顶部*/
 
     /**
      * 设置事件监听器
@@ -46,29 +43,13 @@ public abstract class EventChain {
     }
 
     /**
-     * 设置事件完成监听器
-     */
-    public EventChain setOnEventCompleteListener(OnEventCompleteListener l) {
-        mOnEventCompleteListener = l;
-        return this;
-    }
-
-    /**
-     * 设置事件开始监听器
-     */
-    public EventChain setOnEventStartListener(OnEventStartListener l) {
-        mOnEventStartListener = l;
-        return this;
-    }
-
-    /**
      * 获得链条观察者管理器,用于监控链条中事件状态
      */
-    protected final ChainObserverManager getChainObserverManager() {
+    protected final EventChainObserverManager getChainObserverManager() {
         EventChain first = getFirst();
         if (this == first) {
             if (mChainObserverManager == null) {
-                mChainObserverManager = new ChainObserverManager();
+                mChainObserverManager = new EventChainObserverManager();
             }
             return mChainObserverManager;
         } else {
@@ -200,7 +181,6 @@ public abstract class EventChain {
         }
         mFlag |= FLAG_STARTED;
         if (mOnEventListenerManager != null) mOnEventListenerManager.onStart();
-        if (mOnEventStartListener != null) mOnEventStartListener.onStart();
         if (mOnEventListener != null) mOnEventListener.onStart();
         if (this == getFirst()) {
             getChainObserverManager().onChainStart();
@@ -311,7 +291,6 @@ public abstract class EventChain {
         if (mOnEventListener != null) mOnEventListener.onNext();
         if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
         if (mOnEventListener != null) mOnEventListener.onComplete();
-        if (mOnEventCompleteListener != null) mOnEventCompleteListener.onComplete();
         getChainObserverManager().onNext(this);
 
 
@@ -333,7 +312,6 @@ public abstract class EventChain {
 
         if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
         if (mOnEventListener != null) mOnEventListener.onComplete();
-        if (mOnEventCompleteListener != null) mOnEventCompleteListener.onComplete();
         getChainObserverManager().onChainComplete();
     }
 

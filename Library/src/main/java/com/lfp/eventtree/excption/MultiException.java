@@ -17,9 +17,8 @@ public class MultiException extends EventException {
     List<Throwable> array;
 
     public MultiException() {
-        super("包含多个错误，请使用 MultiException.getArray()查看详细信息!");
+        super("发生多处错误!");
     }
-
 
     public void add(Throwable t) {
         if (array == null) array = new ArrayList<>();
@@ -29,4 +28,16 @@ public class MultiException extends EventException {
     public List<Throwable> getArray() {
         return array;
     }
+
+    @Override
+    public void printStackTrace() {
+        if (array == null || array.isEmpty()) {
+            super.printStackTrace();
+        } else {
+            for (Throwable t : array) {
+                t.printStackTrace();
+            }
+        }
+    }
+
 }
