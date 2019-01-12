@@ -17,14 +17,16 @@ public abstract class EventChain {
     /*中断事件，整个链条都会停止下发后续事件*/
     private static final int FLAG_INTERRUPT = 0x2;
     /*中断事件，跳过后面所有事件直接完成 */
-    private static final int FLAG_END = 0x4;
+    private static final int FLAG_COMPLETE = 0x4;
     /*事件执行失败，不执行后续操作*/
     private static final int FLAG_ERROR = 0x10;
     /*事件执行成功，执行后续操作*/
     private static final int FLAG_NEXT = 0x20;
-    /*事件执行完成*/
-    private static final int FLAG_COMPLETE = 0xF0;
+    /*事件被关闭 , 被关闭的事件不允许操作*/
+    private static final int MASK_SHUTDOWN = 0xF0; // 1111 0000
 
+    /*停止后续事件的执行*/
+    private static final int MASK_INTERRUPT = FLAG_INTERRUPT | FLAG_COMPLETE;
 
     private int mFlag;
 
@@ -187,7 +189,7 @@ public abstract class EventChain {
 
     /*真正的开始逻辑*/
     protected void run() {
-        if (isComplete()) {
+        if (isShutdown()) {
             throw new IllegalStateException("The event is complete!");
         }
         mFlag |= FLAG_STARTED;
@@ -217,23 +219,26 @@ public abstract class EventChain {
      */
     protected abstract void call() throws Throwable;
 
+    private void checkShutdown() {
+        if (isShutdown()) {
+            throw new IllegalStateException("The event can't execute command. Because it is completed!");
+        }
+    }
+
     /**
      * 当前事件执行结束并且未发生错误，执行后续事件或者完成该事件链
      */
     protected void next() {
-        if (isComplete()) {
-            throw new IllegalStateException("The event can't execute command. Because it is complete!");
-        }
+        checkShutdown();
         onNext();
     }
+
 
     /**
      * 当前事件执行结束，当是发生了错误结束该事件链
      */
     protected void error(Throwable e) {
-        if (isComplete()) {
-            throw new IllegalStateException("The event can't execute command. Because it is complete!");
-        }
+        checkShutdown();
         onError(e);
     }
 
@@ -241,7 +246,13 @@ public abstract class EventChain {
      * 跳过后续事件，直接完成事件链
      */
     public final void complete() {
+        if (isInterrupt()) return;
+        checkShutdown();
         getFirst().onComplete();
+
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
+        if (mOnEventListener != null) mOnEventListener.onComplete();
+        getChainObserverManager().onChainComplete();
     }
 
     /**
@@ -255,7 +266,7 @@ public abstract class EventChain {
      * 当该事件完成，检查时候有后续事件，并执行之后的事件
      */
     protected void onComplete() {
-        mFlag |= FLAG_END;
+        mFlag |= FLAG_COMPLETE;
         if (next != null) {
             next.onComplete();
         }
@@ -282,19 +293,19 @@ public abstract class EventChain {
      * 判断该事件是否被中断
      */
     public boolean isInterrupt() {
-        return (mFlag & FLAG_INTERRUPT) > 0;
+        return (mFlag & MASK_INTERRUPT) > 0;
     }
 
     /**
      * 判断该事件是否被已完成
      */
-    public boolean isComplete() {
-        return (mFlag & FLAG_COMPLETE) != 0;
+    public boolean isShutdown() {
+        return (mFlag & MASK_SHUTDOWN) != 0;
     }
 
     /*中断但是允许完成*/
-    private boolean isEnd() {
-        return (mFlag & FLAG_END) > 0;
+    private boolean isComplete() {
+        return (mFlag & FLAG_COMPLETE) > 0;
     }
 
     /*执行后续事件*/
@@ -302,9 +313,6 @@ public abstract class EventChain {
         if (isInterrupt()) return;
 
         mFlag |= FLAG_NEXT;
-        if (!isComplete()) {
-            throw new IllegalStateException("The event is not complete!");
-        }
         if (mOnEventListenerManager != null) mOnEventListenerManager.onNext();
         if (mOnEventListener != null) mOnEventListener.onNext();
         if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
@@ -312,7 +320,7 @@ public abstract class EventChain {
         getChainObserverManager().onNext(this);
 
 
-        if (next != null && !isEnd()) {
+        if (next != null && !isComplete()) {
             next.run();
         } else {
             getChainObserverManager().onChainComplete();
