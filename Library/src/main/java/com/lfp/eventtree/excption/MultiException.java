@@ -13,28 +13,32 @@ import java.util.List;
  * Created by LiFuPing on 2018/12/20 23:20
  * </pre>
  */
-public class MultiException extends EventException {
-    List<Throwable> array;
+public class MultiException extends RuntimeException {
+    List<Throwable> other;
 
-    public MultiException() {
-        super("发生多处错误!");
+    public MultiException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public MultiException(Throwable cause) {
+        super(cause);
     }
 
     public void add(Throwable t) {
-        if (array == null) array = new ArrayList<>();
-        array.add(t);
+        if (other == null) other = new ArrayList<>();
+        other.add(t);
     }
 
     public List<Throwable> getArray() {
-        return array;
+        return other;
     }
 
     @Override
     public void printStackTrace() {
-        if (array == null || array.isEmpty()) {
+        if (other == null || other.isEmpty()) {
             super.printStackTrace();
         } else {
-            for (Throwable t : array) {
+            for (Throwable t : other) {
                 t.printStackTrace();
             }
         }
