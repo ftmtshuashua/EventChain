@@ -119,6 +119,17 @@ public abstract class EventChain {
     }
 
     /**
+     * 延迟事件的创建，当上一个事件执行结束之后再创建当前请求
+     *
+     * @param eventdelay 事件的创建过程
+     */
+    public EventChain chainDelay(EventDelay.OnEventDelayCreate eventdelay) {
+        if (eventdelay == null) return this;
+        return chain(new EventDelay(eventdelay));
+    }
+
+
+    /**
      * 获得上一个事件
      *
      * @return 上一个事件

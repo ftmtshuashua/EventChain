@@ -83,6 +83,9 @@ public class EventDelay extends EventChain {
         super.onComplete();
     }
 
+    /**
+     * 事件的创建过程
+     */
     @FunctionalInterface
     public interface OnEventDelayCreate {
         /**
