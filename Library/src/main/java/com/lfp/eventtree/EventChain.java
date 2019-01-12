@@ -246,7 +246,7 @@ public abstract class EventChain {
      * 跳过后续事件，直接完成事件链
      */
     public final void complete() {
-        if (isInterrupt()) return;
+        if (isInterrupt() || isComplete()) return;
         checkShutdown();
         getFirst().onComplete();
 
@@ -303,8 +303,10 @@ public abstract class EventChain {
         return (mFlag & MASK_SHUTDOWN) != 0;
     }
 
-    /*中断但是允许完成*/
-    private boolean isComplete() {
+    /**
+     * 中断但是允许完成
+     */
+    public boolean isComplete() {
         return (mFlag & FLAG_COMPLETE) > 0;
     }
 

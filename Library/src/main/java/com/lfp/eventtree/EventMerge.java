@@ -100,10 +100,21 @@ public class EventMerge extends EventChain {
         public void onChainComplete() {
             count.decrementAndGet();
             if (count.intValue() == 0) {
-                if (exception == null) {
-                    next();
+                //可能是某一个请求要求直接结束请求
+                boolean isComplete = false;
+                for (int i = 0; i < mMerge.length; i++) {
+                    isComplete = mMerge[i].isComplete();
+                    if (isComplete) break;
+                }
+
+                if (isComplete) { //其中有事件要求中断请求
+                    complete();
                 } else {
-                    error(exception);
+                    if (exception == null) {
+                        next();
+                    } else {
+                        error(exception);
+                    }
                 }
             }
         }
