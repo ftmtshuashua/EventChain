@@ -85,7 +85,7 @@ public class EventMerge extends EventChain {
         @Override
         public void onError(EventChain event, Throwable e) {
             if (exception == null) {
-                exception = new MultiException(e);
+                exception = new MultiException(e.getMessage(), e);
             }
             exception.add(e);
             getChainObserverManager().onError(event, e);
