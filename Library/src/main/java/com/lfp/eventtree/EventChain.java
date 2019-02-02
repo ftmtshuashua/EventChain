@@ -189,20 +189,25 @@ public abstract class EventChain {
 
     /*真正的开始逻辑*/
     protected void run() {
-        if (isShutdown()) {
-            throw new IllegalStateException("The event is complete!");
-        }
+        checkShutdown();
         mFlag |= FLAG_STARTED;
+        if (isInterrupt()) return;
         if (mOnEventListenerManager != null) mOnEventListenerManager.onStart();
+        if (isInterrupt()) return;
         if (mOnEventListener != null) mOnEventListener.onStart();
         if (this == getFirst()) {
+            if (isInterrupt()) return;
             getChainObserverManager().onChainStart();
         }
+        if (isInterrupt()) return;
         getChainObserverManager().onStart(this);
+        if (isInterrupt()) return;
         onStart();
+        if (isInterrupt()) return;
         try {
             call();
         } catch (Throwable e) {
+            if (isInterrupt()) return;
             error(e);
         }
     }
@@ -316,12 +321,17 @@ public abstract class EventChain {
 
         mFlag |= FLAG_NEXT;
         if (mOnEventListenerManager != null) mOnEventListenerManager.onNext();
+        if (isInterrupt()) return;
         if (mOnEventListener != null) mOnEventListener.onNext();
+        if (isInterrupt()) return;
         if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
+        if (isInterrupt()) return;
         if (mOnEventListener != null) mOnEventListener.onComplete();
+        if (isInterrupt()) return;
         getChainObserverManager().onNext(this);
 
 
+        if (isInterrupt()) return;
         if (next != null && !isComplete()) {
             next.run();
         } else {
@@ -335,11 +345,16 @@ public abstract class EventChain {
 
         mFlag |= FLAG_ERROR;
         if (mOnEventListenerManager != null) mOnEventListenerManager.onError(e);
+        if (isInterrupt()) return;
         if (mOnEventListener != null) mOnEventListener.onError(e);
+        if (isInterrupt()) return;
         getChainObserverManager().onError(this, e);
 
+        if (isInterrupt()) return;
         if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
+        if (isInterrupt()) return;
         if (mOnEventListener != null) mOnEventListener.onComplete();
+        if (isInterrupt()) return;
         getChainObserverManager().onChainComplete();
     }
 
