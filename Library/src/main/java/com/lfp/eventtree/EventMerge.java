@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class EventMerge extends EventChain {
     EventChain[] mMerge;
+    AtomicInteger count;
 
     public EventMerge(EventChain... chains) {
         if (chains != null) {
@@ -42,6 +43,7 @@ public class EventMerge extends EventChain {
         if (this.mMerge == null || this.mMerge.length == 0) {
             next();
         } else {
+            count = new AtomicInteger(this.mMerge.length);
             for (int i = 0; i < this.mMerge.length; i++) {
                 this.mMerge[i].start();
             }
@@ -68,13 +70,13 @@ public class EventMerge extends EventChain {
         super.onComplete();
     }
 
+
     private EventChainObserver mEventChianObserver = new EventChainObserver() {
-        AtomicInteger count = new AtomicInteger(0);
         MultiException exception;
 
         @Override
         public void onChainStart() {
-            count.incrementAndGet();
+//            count.incrementAndGet();
         }
 
         @Override
