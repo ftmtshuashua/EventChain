@@ -1,5 +1,7 @@
 package com.lfp.eventtree;
 
+import android.util.Log;
+
 /**
  * <pre>
  * Tip:
@@ -12,84 +14,17 @@ package com.lfp.eventtree;
  */
 public abstract class EventChain {
 
-    /*标记已经开始运行了*/
-    private static final int FLAG_STARTED = 0x1;
-    /*中断事件，整个链条都会停止下发后续事件*/
-    private static final int FLAG_INTERRUPT = 0x2;
-    /*中断事件，跳过后面所有事件直接完成 */
-    private static final int FLAG_COMPLETE = 0x4;
-    /*事件执行失败，不执行后续操作*/
-    private static final int FLAG_ERROR = 0x10;
-    /*事件执行成功，执行后续操作*/
-    private static final int FLAG_NEXT = 0x20;
-    /*事件被关闭 , 被关闭的事件不允许操作*/
-    private static final int MASK_SHUTDOWN = 0xF0; // 1111 0000
-
-    /*停止后续事件的执行*/
-    private static final int MASK_INTERRUPT = FLAG_INTERRUPT | FLAG_COMPLETE;
-
-    private int mFlag;
-
+    // <editor-fold desc="------ Chain ------">
     private EventChain pre;
     private EventChain next;
-    private OnEventListener mOnEventListener;
-    private OnEventListenerManager mOnEventListenerManager;
-    private EventChainObserverManager mChainObserverManager;/*链条观察者 ，一个链条中只允许存在一个管理器 ,在链条的顶部*/
 
-    /**
-     * 设置事件监听器
-     */
-    public EventChain setOnEventListener(OnEventListener l) {
-        this.mOnEventListener = l;
-        return this;
-    }
-
-    /**
-     * 获得链条观察者管理器,用于监控链条中事件状态
-     */
-    protected final EventChainObserverManager getChainObserverManager() {
-        EventChain first = getFirst();
-        if (this == first) {
-            if (mChainObserverManager == null) {
-                mChainObserverManager = new EventChainObserverManager();
-            }
-            return mChainObserverManager;
-        } else {
-            return first.getChainObserverManager();
+    /*设置事件链中的时间状态*/
+    private void setLaterChainState(ChainState state) {
+        EventChain event = this;
+        while (event != null) {
+            event.mState = state;
+            event = event.next;
         }
-    }
-
-    /**
-     * 添加链条事件观察者,具有观察整个链条的能力
-     */
-    public EventChain addEventChainObserver(EventChainObserver l) {
-        getChainObserverManager().addEventChainObserver(l);
-        return this;
-    }
-
-    /**
-     * 移除链条事件观察者
-     */
-    public EventChain removeEventChainObserver(EventChainObserver l) {
-        getChainObserverManager().removeEventChainObserver(l);
-        return this;
-    }
-
-    /**
-     * 添加事件监听器
-     */
-    public EventChain addOnEventListener(OnEventListener l) {
-        if (mOnEventListenerManager == null) mOnEventListenerManager = new OnEventListenerManager();
-        mOnEventListenerManager.addOnEventListener(l);
-        return this;
-    }
-
-    /**
-     * 移除事件监听器
-     */
-    public EventChain removeOnEventListener(OnEventListener l) {
-        if (mOnEventListenerManager != null) mOnEventListenerManager.removeOnEventListener(l);
-        return this;
     }
 
     /**
@@ -107,6 +42,7 @@ public abstract class EventChain {
             last.next.pre = last;
         }
         this.next = first;
+        chain.setLaterChainState(mState); /*配置链状态*/
         return chain;
     }
 
@@ -119,17 +55,6 @@ public abstract class EventChain {
         if (chain == null) return this;
         return chain(new EventMerge(chain));
     }
-
-    /**
-     * 延迟事件的创建，当上一个事件执行结束之后再创建当前请求
-     *
-     * @param eventdelay 事件的创建过程
-     */
-    public EventChain chainDelay(EventDelay.OnEventDelayCreate eventdelay) {
-        if (eventdelay == null) return this;
-        return chain(new EventDelay(eventdelay));
-    }
-
 
     /**
      * 获得上一个事件
@@ -172,192 +97,14 @@ public abstract class EventChain {
     }
 
     /**
-     * 开始这个事件链
+     * 延迟事件的创建，当上一个事件执行结束之后再创建当前请求
+     *
+     * @param eventdelay 事件的创建过程
      */
-    public final void start() {
-        if ((getFirst().mFlag & FLAG_STARTED) != 0) {
-            throw new IllegalStateException("The event is started,");
-        }
-
-        EventChain event = getFirst();
-        if (this == event) {
-            run();
-        } else {
-            event.start();
-        }
+    public EventChain chainDelay(EventDelay.OnEventDelayCreate eventdelay) {
+        if (eventdelay == null) return this;
+        return chain(new EventDelay(eventdelay));
     }
-
-    /*真正的开始逻辑*/
-    protected void run() {
-        checkShutdown();
-        mFlag |= FLAG_STARTED;
-        if (isInterrupt()) return;
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onStart();
-        if (isInterrupt()) return;
-        if (mOnEventListener != null) mOnEventListener.onStart();
-        if (this == getFirst()) {
-            if (isInterrupt()) return;
-            getChainObserverManager().onChainStart();
-        }
-        if (isInterrupt()) return;
-        getChainObserverManager().onStart(this);
-        if (isInterrupt()) return;
-        onStart();
-        if (isInterrupt()) return;
-        try {
-            call();
-        } catch (Throwable e) {
-            if (isInterrupt()) return;
-            error(e);
-        }
-    }
-
-    /**
-     * 当事件开始执行
-     */
-    protected void onStart() {
-
-    }
-
-    /**
-     * 执行事件自己的业务逻辑,并且处理事件生命周期
-     */
-    protected abstract void call() throws Throwable;
-
-    private void checkShutdown() {
-        if (isShutdown()) {
-            throw new IllegalStateException("The event can't execute command. Because it is completed!");
-        }
-    }
-
-    /**
-     * 当前事件执行结束并且未发生错误，执行后续事件或者完成该事件链
-     */
-    protected void next() {
-        checkShutdown();
-        onNext();
-    }
-
-
-    /**
-     * 当前事件执行结束，当是发生了错误结束该事件链
-     */
-    protected void error(Throwable e) {
-        checkShutdown();
-        onError(e);
-    }
-
-    /**
-     * 跳过后续事件，直接完成事件链
-     */
-    public final void complete() {
-        if (isInterrupt() || isComplete()) return;
-        checkShutdown();
-        getFirst().onComplete();
-
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
-        if (mOnEventListener != null) mOnEventListener.onComplete();
-        getChainObserverManager().onChainComplete();
-    }
-
-    /**
-     * 中断整个事件链，调用该方法之后后续所有事件和回调将停止
-     */
-    public final void interrupt() {
-        getFirst().onInterrupt();
-    }
-
-    /**
-     * 当该事件完成，检查时候有后续事件，并执行之后的事件
-     */
-    protected void onComplete() {
-        mFlag |= FLAG_COMPLETE;
-        if (next != null) {
-            next.onComplete();
-        }
-    }
-
-    /**
-     * 当该事件被终止，将立即停止当前时候的后续操作和回调
-     */
-    protected void onInterrupt() {
-        mFlag |= FLAG_INTERRUPT;
-        if (next != null) {
-            next.onInterrupt();
-        }
-    }
-
-    /**
-     * 判断该事件是否已开始执行
-     */
-    public final boolean isStarted() {
-        return (mFlag & FLAG_STARTED) > 0;
-    }
-
-    /**
-     * 判断该事件是否被中断
-     */
-    public boolean isInterrupt() {
-        return (mFlag & MASK_INTERRUPT) > 0;
-    }
-
-    /**
-     * 判断该事件是否被已完成
-     */
-    public boolean isShutdown() {
-        return (mFlag & MASK_SHUTDOWN) != 0;
-    }
-
-    /**
-     * 中断但是允许完成
-     */
-    public boolean isComplete() {
-        return (mFlag & FLAG_COMPLETE) > 0;
-    }
-
-    /*执行后续事件*/
-    private final void onNext() {
-        if (isInterrupt()) return;
-
-        mFlag |= FLAG_NEXT;
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onNext();
-        if (isInterrupt()) return;
-        if (mOnEventListener != null) mOnEventListener.onNext();
-        if (isInterrupt()) return;
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
-        if (isInterrupt()) return;
-        if (mOnEventListener != null) mOnEventListener.onComplete();
-        if (isInterrupt()) return;
-        getChainObserverManager().onNext(this);
-
-
-        if (isInterrupt()) return;
-        if (next != null && !isComplete()) {
-            next.run();
-        } else {
-            getChainObserverManager().onChainComplete();
-        }
-    }
-
-    /*回调错误*/
-    private final void onError(Throwable e) {
-        if (isInterrupt()) return;
-
-        mFlag |= FLAG_ERROR;
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onError(e);
-        if (isInterrupt()) return;
-        if (mOnEventListener != null) mOnEventListener.onError(e);
-        if (isInterrupt()) return;
-        getChainObserverManager().onError(this, e);
-
-        if (isInterrupt()) return;
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onComplete();
-        if (isInterrupt()) return;
-        if (mOnEventListener != null) mOnEventListener.onComplete();
-        if (isInterrupt()) return;
-        getChainObserverManager().onChainComplete();
-    }
-
 
     /**
      * 用于创建一个并发事件或者包裹一个事件链
@@ -369,5 +116,299 @@ public abstract class EventChain {
         return new EventMerge(chain);
     }
 
+    // </editor-fold>
 
+    // <editor-fold desc="------ call ------">
+
+    /**
+     * 有实现自己重写业务逻辑，并处理事件的生命周期
+     */
+    protected abstract void call() throws Throwable;
+
+    /**
+     * 从链头开始执行事件链
+     */
+    public void start() {
+        final EventChain first = getFirst();
+        if (this == first) { /*如果当前为链头，开始执行*/
+            if (isStarted()) throw new IllegalStateException("The event is started,");
+            mState.isStarted = true;
+            mState.mCurrentRunEvent = this;
+            if (isProcess()) exeStartChain();
+            run();
+        } else {
+            first.start();
+        }
+    }
+
+    /*执行事件链内部流程*/
+    private void run() {
+        mState.mCurrentRunEvent = this;
+        if (isProcess()) onStart();
+        if (isProcess()) exeStartEvent();
+        if (isProcess()) exeStartChainEvent();
+
+        if (isProcess()) {
+            try {
+                call();
+            } catch (Throwable e) {
+                if (isProcess()) error(e);
+            }
+        }
+    }
+
+
+    /**
+     * 当前事件执行结束并且未发生错误，执行后续事件或者完成该事件链
+     */
+    protected void next() {
+        if (isProcess()) exeNextEvent();
+        if (isProcess()) exeNextChain();
+        if (isProcess()) exeCompleteEvent();
+
+        if (isProcess()) {
+            /*如果还有后续事件，则执行后续事件 ， 否者完成这条事件链*/
+            if (next != null) {
+                next.run();
+            } else {
+                getChainObserverManager().onChainComplete();
+            }
+        }
+    }
+
+    /**
+     * 当前事件执行结束，当是发生了错误结束该事件链
+     */
+    protected void error(Throwable e) {
+        if (isProcess()) exeErrorEvent(e);
+        if (isProcess()) exeErrorChain(e);
+        if (isProcess()) exeCompleteEvent();
+        if (isProcess()) exeCompleteChain();
+    }
+
+    /**
+     * 当事件开始执的时候调用
+     */
+    protected void onStart() {
+
+    }
+
+    // </editor-fold>
+
+    // <editor-fold desc="------ ChainState ------">
+
+    /**
+     * 强制跳过后续事件，直接完成事件链
+     */
+    public void complete() {
+        /*已中断和已完成的事件*/
+        if (isStarted() && isProcess()) {
+            getChainState().isComplete = true;
+
+            if (!isInterrupt()) exeCompleteEvent(mState.mCurrentRunEvent);
+            if (!isInterrupt()) exeCompleteChain(mState.mCurrentRunEvent);
+        }
+        if (next != null) next.complete();
+    }
+
+    /**
+     * 中断整个事件链，调用该方法之后后续所有事件和回调将停止
+     */
+    public void interrupt() {
+        getChainState().isInterrupt = true;
+        if (next != null) next.interrupt();
+    }
+
+    /**
+     * 判断该事件是否被中断
+     */
+    public boolean isInterrupt() {
+        return mState.isInterrupt;
+    }
+
+    /**
+     * 判断是否强制完成整个事件链
+     */
+    public boolean isComplete() {
+        return mState.isComplete;
+    }
+
+    /**
+     * 判断该事件是否已开始执行
+     */
+    public final boolean isStarted() {
+        return mState.isStarted;
+    }
+
+
+    /*判断时候正常进行后续流程 , 如果事件链为Interrupt或者Complete的情况中断后续业务*/
+    public final boolean isProcess() {
+        return !isInterrupt() && !isComplete();
+    }
+
+    /*获得事件状态*/
+    public ChainState getChainState() {
+        return mState;
+    }
+
+    /**
+     * 每一个链条都有且之后一个独立的链条状态,当后续事件接入某个链的后面的时候，他的状态会被替换为链头的状态对象
+     */
+    private ChainState mState = new ChainState();
+
+    /**
+     * 事件链的状态
+     */
+    public static final class ChainState {
+        /**
+         * 当事件开始之后该值变为true
+         */
+        boolean isStarted = false;
+        boolean isInterrupt = false;
+        boolean isComplete = false;
+        EventChain mCurrentRunEvent; /*当前正在运行的事件 */
+
+        /**
+         * 判断该事件是否被中断
+         */
+        public boolean isStarted() {
+            return isStarted;
+        }
+
+        /**
+         * 判断该事件是否被中断
+         */
+        public boolean isInterrupt() {
+            return isInterrupt;
+        }
+
+        /**
+         * 中断但是允许完成
+         */
+        public boolean isComplete() {
+            return isComplete;
+        }
+    }
+    // </editor-fold>
+
+    // <editor-fold desc="------ Observable ------">
+    private OnEventListenerManager mOnEventListenerManager;
+    private EventChainObserverManager mChainObserverManager;/*链条观察者 ，一个链条中只允许存在一个管理器 ,在链条的顶部*/
+
+
+    /**
+     * 获得链条观察者管理器,用于监控链条中事件状态
+     */
+    protected final EventChainObserverManager getChainObserverManager() {
+        EventChain first = getFirst();
+        if (this == first) {
+            if (mChainObserverManager == null) {
+                mChainObserverManager = new EventChainObserverManager();
+            }
+            return mChainObserverManager;
+        } else {
+            return first.getChainObserverManager();
+        }
+    }
+
+    /**
+     * 添加链条事件观察者,具有观察整个链条的能力
+     */
+    public EventChain addEventChainObserver(EventChainObserver l) {
+        getChainObserverManager().addEventChainObserver(l);
+        return this;
+    }
+
+    /**
+     * 移除链条事件观察者
+     */
+    public EventChain removeEventChainObserver(EventChainObserver l) {
+        getChainObserverManager().removeEventChainObserver(l);
+        return this;
+    }
+
+    /**
+     * 设置事件监听，监听事件进度
+     * <p>
+     * 请使用 {@link EventChain#addOnEventListener(OnEventListener)} ，该方法可能会在未来的某个版本中被删除
+     */
+    @Deprecated
+    public EventChain setOnEventListener(OnEventListener l) {
+        addOnEventListener(l);
+        return this;
+    }
+
+    /**
+     * 添加事件监听器
+     */
+    public EventChain addOnEventListener(OnEventListener l) {
+        if (mOnEventListenerManager == null) mOnEventListenerManager = new OnEventListenerManager();
+        mOnEventListenerManager.addOnEventListener(l);
+        return this;
+    }
+
+    /**
+     * 移除事件监听器
+     */
+    public EventChain removeOnEventListener(OnEventListener l) {
+        if (mOnEventListenerManager != null) mOnEventListenerManager.removeOnEventListener(l);
+        return this;
+    }
+
+
+    /*当整个链条开始执行的时候*/
+    private void exeStartChain() {
+        getChainObserverManager().onChainStart();
+    }
+
+    /*当链条中的事件开始执行*/
+    private void exeStartChainEvent() {
+        getChainObserverManager().onStart(this);
+    }
+
+    private void exeStartEvent() {
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onStart();
+    }
+
+    protected void exeCompleteChain() {
+        exeCompleteChain(this);
+    }
+
+    private static void exeCompleteChain(EventChain event) {
+        event.getChainObserverManager().onChainComplete();
+    }
+
+    /*事件完成*/
+    boolean isCompleteEvent = false;
+
+    protected void exeCompleteEvent() {
+        exeCompleteEvent(this);
+    }
+
+    private static void exeCompleteEvent(EventChain eventChain) {
+        if (eventChain.isCompleteEvent) return;
+        Log.e("EventChain", "exeCompleteEvent:" + eventChain);
+        eventChain.isCompleteEvent = true;
+        if (eventChain.mOnEventListenerManager != null)
+            eventChain.mOnEventListenerManager.onComplete();
+    }
+
+    protected void exeNextChain() {
+        getChainObserverManager().onNext(this);
+    }
+
+    protected void exeNextEvent() {
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onNext();
+    }
+
+    protected void exeErrorChain(Throwable e) {
+        getChainObserverManager().onError(this, e);
+    }
+
+    protected void exeErrorEvent(Throwable e) {
+        if (mOnEventListenerManager != null) mOnEventListenerManager.onError(e);
+    }
+
+
+    // </editor-fold>
 }

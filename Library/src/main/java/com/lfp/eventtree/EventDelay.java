@@ -11,9 +11,8 @@ package com.lfp.eventtree;
  * </pre>
  */
 public class EventDelay extends EventChain {
-    private OnEventDelayCreate mOnEventDelay;
 
-    private EventChain mDelayEvent; // 延时加载的Event
+    private OnEventDelayCreate mOnEventDelay;
 
     public EventDelay(OnEventDelayCreate delayevent) {
         mOnEventDelay = delayevent;
@@ -22,65 +21,12 @@ public class EventDelay extends EventChain {
     @Override
     protected void onStart() {
         super.onStart();
-        if (mOnEventDelay != null) {
-            mDelayEvent = mOnEventDelay.create();
-            if (mDelayEvent != null) {
-                mDelayEvent.addEventChainObserver(new EventChainObserver() {
-                    Throwable e;
-
-                    @Override
-                    public void onChainStart() {
-
-                    }
-
-                    @Override
-                    public void onStart(EventChain event) {
-                        getChainObserverManager().onStart(event);
-                    }
-
-                    @Override
-                    public void onError(EventChain event, Throwable e) {
-                        this.e = e;
-                        getChainObserverManager().onError(event, e);
-                    }
-
-                    @Override
-                    public void onNext(EventChain event) {
-                        getChainObserverManager().onNext(event);
-                    }
-
-                    @Override
-                    public void onChainComplete() {
-                        if (this.e == null) {
-                            next();
-                        } else {
-                            error(e);
-                        }
-                    }
-                });
-            }
-        }
+        if (mOnEventDelay != null) chain(mOnEventDelay.create());
     }
 
     @Override
-    protected void call() throws Throwable {
-        if (mDelayEvent != null) {
-            mDelayEvent.start();
-        } else {
-            next();
-        }
-    }
-
-    @Override
-    protected void onInterrupt() {
-        if (mDelayEvent != null) mDelayEvent.interrupt();
-        super.onInterrupt();
-    }
-
-    @Override
-    protected void onComplete() {
-        if (mDelayEvent != null) mDelayEvent.complete();
-        super.onComplete();
+    protected void call() {
+        next();
     }
 
     /**

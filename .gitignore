@@ -27,3 +27,17 @@ local.properties
 gradle/
 *.iml
 app/build/
+备份/eventtree/Action1.java
+备份/eventtree/EventChain.java
+备份/eventtree/EventChainObserver.java
+备份/eventtree/EventChainObserverManager.java
+备份/eventtree/EventDelay.java
+备份/eventtree/EventMerge.java
+备份/eventtree/excption/EventException.java
+备份/eventtree/excption/MultiException.java
+备份/eventtree/OnEventCompleteListener.java
+备份/eventtree/OnEventFailureListener.java
+备份/eventtree/OnEventListener.java
+备份/eventtree/OnEventListenerManager.java
+备份/eventtree/OnEventStartListener.java
+备份/eventtree/OnEventSucceedListener.java

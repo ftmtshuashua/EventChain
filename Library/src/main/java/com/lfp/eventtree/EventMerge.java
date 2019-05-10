@@ -1,10 +1,12 @@
 package com.lfp.eventtree;
 
+import android.util.Log;
+
 import com.lfp.eventtree.excption.MultiException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * <pre>
@@ -18,65 +20,62 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </pre>
  */
 public class EventMerge extends EventChain {
-    EventChain[] mMerge;
-    AtomicInteger count;
+
+    /**
+     * 记录事件集合与事件状态
+     */
+    final Map<EventChain, Boolean> mMerge = new HashMap<>();
 
     public EventMerge(EventChain... chains) {
         if (chains != null) {
-            List<EventChain> array = new ArrayList<>();
             for (int i = 0; i < chains.length; i++) {
-                EventChain item = chains[i];
-                if (item != null) {
-                    item.addEventChainObserver(mEventChianObserver);
-                    array.add(item);
-                }
-            }
-            if (!array.isEmpty()) {
-                mMerge = new EventChain[array.size()];
-                array.toArray(mMerge);
+                EventChain event = chains[i];
+                if (event == null) continue;
+                event.addEventChainObserver(mEventChianObserver);
+                mMerge.put(event, false);
             }
         }
     }
 
     @Override
-    protected void call() throws Throwable {
-        if (this.mMerge == null || this.mMerge.length == 0) {
+    protected void call() {
+        if (mMerge.isEmpty()) {
             next();
         } else {
-            count = new AtomicInteger(this.mMerge.length);
-            for (int i = 0; i < this.mMerge.length; i++) {
-                this.mMerge[i].start();
+            final Iterator<EventChain> iterator = mMerge.keySet().iterator();
+            while (iterator.hasNext()) {
+                iterator.next().start();
             }
         }
     }
 
     @Override
-    protected void onInterrupt() {
-        if (mMerge != null) {
-            for (int i = 0; i < mMerge.length; i++) {
-                mMerge[i].interrupt();
-            }
+    public void interrupt() {
+        Log.e("EventMerge", "interrupt:"+this);
+        final Iterator<EventChain> iterator = mMerge.keySet().iterator();
+        while (iterator.hasNext()) {
+            final EventChain next = iterator.next();
+            Log.e("EventChain", "interrupt:" + next);
+            next.interrupt();
         }
-        super.onInterrupt();
+        super.interrupt();
     }
 
     @Override
-    protected void onComplete() {
-        if (mMerge != null) {
-            for (int i = 0; i < mMerge.length; i++) {
-                mMerge[i].complete();
-            }
+    public void complete() {
+        final Iterator<EventChain> iterator = mMerge.keySet().iterator();
+        while (iterator.hasNext()) {
+            iterator.next().complete();
         }
-        super.onComplete();
+        super.complete();
     }
 
 
-    private EventChainObserver mEventChianObserver = new EventChainObserver() {
-        MultiException exception;
+    private final EventChainObserver mEventChianObserver = new EventChainObserver() {
+        private final MultiException exception = new MultiException();
 
         @Override
         public void onChainStart() {
-//            count.incrementAndGet();
         }
 
         @Override
@@ -86,39 +85,42 @@ public class EventMerge extends EventChain {
 
         @Override
         public void onError(EventChain event, Throwable e) {
-            if (exception == null) {
-                exception = new MultiException(e.getMessage(), e);
-            }
             exception.add(e);
+
             getChainObserverManager().onError(event, e);
+            mMerge.put(event, true);
         }
 
         @Override
         public void onNext(EventChain event) {
             getChainObserverManager().onNext(event);
+            mMerge.put(event, true);
         }
 
         @Override
         public void onChainComplete() {
-            count.decrementAndGet();
-            if (count.intValue() == 0) {
-                //可能是某一个请求要求直接结束请求
-                boolean isComplete = false;
-                for (int i = 0; i < mMerge.length; i++) {
-                    isComplete = mMerge[i].isComplete();
-                    if (isComplete) break;
-                }
+            final Iterator<Boolean> iterator = mMerge.values().iterator();
+            while (iterator.hasNext()) {
+                if (!iterator.next()) return;
+            }
 
-                if (isComplete) { //其中有事件要求中断请求
+            /*全部事件完成*/
+            final Iterator<EventChain> events = mMerge.keySet().iterator();
+            while (events.hasNext()) {
+                final EventChain next = events.next();
+
+                if (next.isComplete()) {
                     complete();
-                } else {
-                    if (exception == null) {
-                        next();
-                    } else {
-                        error(exception);
-                    }
+                    return;
                 }
             }
+
+            if (exception.getArray().isEmpty()) {
+                next();
+            } else {
+                error(exception);
+            }
+
         }
     };
 }

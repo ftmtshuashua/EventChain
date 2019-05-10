@@ -6,6 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/view_Info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="100dp" />
+    </ScrollView>
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -40,11 +51,12 @@
             android:layout_height="wrap_content"
             android:onClick="cancel"
             android:text="中断链条" />
-    </LinearLayout>
 
-    <TextView
-        android:id="@+id/view_Info"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="complete"
+            android:text="完成链条" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -28,7 +28,6 @@ public interface OnEventListener {
      *
      * @param e 错误信息,包含一个或者多个错误信息
      * @see com.lfp.eventtree.excption.MultiException
-     * @see com.lfp.eventtree.excption.EventException
      */
     void onError(Throwable e);
 
