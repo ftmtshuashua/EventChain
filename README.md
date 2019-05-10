@@ -13,17 +13,14 @@
 ![EventChain](https://github.com/ftmtshuashua/EventChain/blob/master/resouce/flow.png)
 
 
-## 组件的拓展
-1.覆写[call()]()方法实现业务逻辑
+## 使用
+将我们的业务封装为一个[EventChain],实现[call()]()方法.并在[call()]()中处理自己的业务.
 
-2.如果业务执行完成并且没有出错执行[next()]()方法进行后续流程
+1.当业务处理完成请显示调用[next()]()或者[error()]()方法告诉事件链该事件处理完成
 
-3.如果业务执行错误请调用[error(Throwable e)]()方法抛出异常
+2.[interrupt()]()方法被调用之后的所有回调都不会再发送
 
-* 通常以上方法就能构建一个业务处理链
-* [complete()]()和[interrupt()]()方法都能中断链条，[complete()]()会回调complete()方法，[interrupt()]()之后的左右事件都不会被调用
-
-
+3.[complete()]()方法被调用之后将立即完成当前正在执行的事件,并完成整个事件链
 
 
 ## 配置依赖

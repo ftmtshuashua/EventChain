@@ -119,6 +119,7 @@ public abstract class EventChain {
     // </editor-fold>
 
     // <editor-fold desc="------ call ------">
+    boolean mEventend = false;
 
     /**
      * 有实现自己重写业务逻辑，并处理事件的生命周期
@@ -152,7 +153,7 @@ public abstract class EventChain {
             try {
                 call();
             } catch (Throwable e) {
-                if (isProcess()) error(e);
+                error(e);
             }
         }
     }
@@ -162,6 +163,9 @@ public abstract class EventChain {
      * 当前事件执行结束并且未发生错误，执行后续事件或者完成该事件链
      */
     protected void next() {
+        if (mEventend) return;
+        mEventend = true;
+
         if (isProcess()) exeNextEvent();
         if (isProcess()) exeNextChain();
         if (isProcess()) exeCompleteEvent();
@@ -180,6 +184,9 @@ public abstract class EventChain {
      * 当前事件执行结束，当是发生了错误结束该事件链
      */
     protected void error(Throwable e) {
+        if (mEventend) return;
+        mEventend = true;
+
         if (isProcess()) exeErrorEvent(e);
         if (isProcess()) exeErrorChain(e);
         if (isProcess()) exeCompleteEvent();
