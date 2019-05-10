@@ -6,7 +6,10 @@ import android.widget.TextView;
 
 import com.lfp.eventtree.EventChain;
 import com.lfp.eventtree.EventChainObserver;
+import com.lfp.eventtree.OnEventFailureListener;
 import com.lfp.eventtree.OnEventListener;
+import com.lfp.eventtree.excption.EventException;
+import com.lfp.eventtree.excption.MultiException;
 
 import java.text.MessageFormat;
 
@@ -54,15 +57,15 @@ public class MainActivity extends AppCompatActivity {
         appendTop("事件链");
         mChain =
                 DemoEvent.create(
-                new DemoEvent("E 1")
-                .chain(new DemoEvent("E 2"))
-                .chain(new DemoEvent("E 3"))
-                .chain(new DemoEvent("E 4"))
-                .chainDelay(() -> {
-                    appendMsg("------- 正在创建事件 E6 -------");
-                    return new DemoEvent("E 6");
-                })
-                .chain(new DemoEvent("E 5"))
+                        new DemoEvent("E 1")
+                                .chain(new DemoEvent("E 2"))
+                                .chain(new DemoEvent("E 3"))
+                                .chain(new DemoEvent("E 4"))
+                                .chainDelay(() -> {
+                                    appendMsg("------- 正在创建事件 E6 -------");
+                                    return new DemoEvent("E 6");
+                                })
+                                .chain(new DemoEvent("E 5"))
                 )
         ;
 
@@ -79,8 +82,10 @@ public class MainActivity extends AppCompatActivity {
                 , new DemoEvent("E 4")
                 , new DemoEvent("E 5")
         );
-        mChain.addOnEventListener(new EventLisenter("并发事件")).start();
+        mChain.addOnEventListener(new EventLisenter("并发事件"))
+                .start();
     }
+
 
     public void test3(View v) {
         StringBuffer sb = new StringBuffer("复杂业务场景模拟：")
@@ -113,6 +118,39 @@ public class MainActivity extends AppCompatActivity {
         mChain.start();
     }
 
+    /*错误测试*/
+    public void test21(View v) {
+        appendTop("测试事件");
+        mChain = EventChain.create(
+                EventChain.create(
+                        new DemoEvent("E 6")
+                                .chain(
+                                        EventChain.create(
+                                                new DemoEvent("E 1")
+                                                , new DemoEvent("E 2").setTestExcption(true)
+                                                , new DemoEvent("E 3")
+                                                , new DemoEvent("E 4")
+                                                , new DemoEvent("E 5")
+                                        )
+                                )
+                )
+        )
+        ;
+
+        mChain
+                .addEventChainObserver(mEventObserver)
+                .addOnEventListener(new EventLisenter("测试事件"))
+                .addOnEventListener((OnEventFailureListener) e -> {
+                    Utils.log("-----------------------");
+                    Utils.log(e.getMessage());
+                    if (e instanceof MultiException) {
+                        MultiException ex = (MultiException) e;
+                        Utils.log(MessageFormat.format("错误信息列表:{0}", ex.getArray()));
+                    }
+                    Utils.log("-----------------------");
+                })
+                .start();
+    }
 
     class EventLisenter implements OnEventListener {
         String info;
@@ -183,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
 
         boolean testDynamic; //是否增加动态事件添加功能
         boolean testInterrupt = false; //是否关闭事件链
+        boolean testException = false;/*异常信息测试*/
 
         public DemoEvent(String info) {
             this.info = info;
@@ -206,6 +245,9 @@ public class MainActivity extends AppCompatActivity {
 //                            complete();
 //                            return;
 //                        }
+                        if (testException) {
+                            error(new EventException("测试抛出异常信息!"));
+                        }
 
                         if (testInterrupt) interrupt();
                         next();
@@ -245,6 +287,11 @@ public class MainActivity extends AppCompatActivity {
          */
         public EventChain setTestInterrupt(boolean is) {
             testInterrupt = is;
+            return this;
+        }
+
+        public EventChain setTestExcption(boolean is) {
+            testException = is;
             return this;
         }
 

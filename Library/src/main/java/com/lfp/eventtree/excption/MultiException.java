@@ -2,8 +2,8 @@ package com.lfp.eventtree.excption;
 
 import com.lfp.eventtree.EventChainUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <pre>
@@ -16,7 +16,15 @@ import java.util.List;
  * </pre>
  */
 public class MultiException extends RuntimeException {
-    final List<Throwable> arrays = new ArrayList<>();
+    final Set<Throwable> arrays = new HashSet<>();
+
+    public MultiException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public MultiException(Throwable cause) {
+        super(cause);
+    }
 
     public MultiException(String message) {
         super(message);
@@ -29,7 +37,7 @@ public class MultiException extends RuntimeException {
     /**
      * 插入异常信息
      */
-    public void add(Throwable t) {
+    public void put(Throwable t) {
         if (t != null) arrays.add(t);
         else {
             if (EventChainUtils.isDebug()) System.err.println("不能放入一个空异常信息!");
@@ -39,8 +47,30 @@ public class MultiException extends RuntimeException {
     /**
      * 获得异常列表
      */
-    public List<Throwable> getArray() {
+    public Set<Throwable> getArray() {
         return arrays;
+    }
+
+    /**
+     * 判断错误列表是否为空
+     */
+    public boolean isEmpty() {
+        return arrays.isEmpty();
+    }
+
+    /**
+     * 获得错误列表的大小
+     */
+    public int size() {
+        return arrays.size();
+    }
+
+    /**
+     * 获得错误列表中第一个错误，如果错误列表为空则返回错误本身
+     */
+    public Throwable getFirst() {
+        if (arrays.isEmpty()) return this;
+        return arrays.iterator().next();
     }
 
     @Override
@@ -48,7 +78,7 @@ public class MultiException extends RuntimeException {
         if (arrays.isEmpty()) {
             super.printStackTrace();
         } else if (arrays.size() == 1) {
-            arrays.get(0).printStackTrace();
+            getFirst().printStackTrace();
         } else {
             System.err.println("↓↓↓↓↓↓↓↓↓↓ " + getMessage() + " ↓↓↓↓↓↓↓↓↓↓");
             for (Throwable t : arrays) {
@@ -64,7 +94,7 @@ public class MultiException extends RuntimeException {
         if (arrays.isEmpty()) {
             return super.getMessage();
         } else if (arrays.size() == 1) {
-            return arrays.get(0).getMessage();
+            return getFirst().getMessage();
         } else {
             return "事件链中有 " + arrays.size() + " 个异常需要处理";
         }

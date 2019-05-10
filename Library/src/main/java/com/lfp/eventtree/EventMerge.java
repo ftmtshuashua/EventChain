@@ -86,7 +86,7 @@ public class EventMerge extends EventChain {
 
         @Override
         public void onError(EventChain event, Throwable e) {
-            exception.add(e);
+            exception.put(e);
             getChainObserverManager().onError(event, e);
         }
 
@@ -115,10 +115,14 @@ public class EventMerge extends EventChain {
                 }
             }
 
-            if (exception.getArray().isEmpty()) {
+            if (exception.isEmpty()) {
                 next();
             } else {
-                error(exception);
+                if (exception.size() == 1) {
+                    error(exception.getFirst());
+                } else {
+                    error(exception);
+                }
             }
 
         }
