@@ -9,6 +9,10 @@
 
 >源生Java实现
 
+
+![EventChain](https://github.com/ftmtshuashua/EventChain/blob/master/resouce/flow.png)
+
+
 ## 组件的拓展
 1.覆写[call()]()方法实现业务逻辑
 
