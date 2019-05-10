@@ -1,7 +1,5 @@
 package com.lfp.eventtree;
 
-import android.util.Log;
-
 /**
  * <pre>
  * Tip:
@@ -394,7 +392,6 @@ public abstract class EventChain {
 
     private static void exeCompleteEvent(EventChain eventChain) {
         if (eventChain.isCompleteEvent) return;
-        Log.e("EventChain", "exeCompleteEvent:" + eventChain);
         eventChain.isCompleteEvent = true;
         if (eventChain.mOnEventListenerManager != null)
             eventChain.mOnEventListenerManager.onComplete();

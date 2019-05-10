@@ -1,7 +1,5 @@
 package com.lfp.eventtree;
 
-import android.util.Log;
-
 import com.lfp.eventtree.excption.MultiException;
 
 import java.util.HashMap;
@@ -51,11 +49,9 @@ public class EventMerge extends EventChain {
 
     @Override
     public void interrupt() {
-        Log.e("EventMerge", "interrupt:"+this);
         final Iterator<EventChain> iterator = mMerge.keySet().iterator();
         while (iterator.hasNext()) {
             final EventChain next = iterator.next();
-            Log.e("EventChain", "interrupt:" + next);
             next.interrupt();
         }
         super.interrupt();
