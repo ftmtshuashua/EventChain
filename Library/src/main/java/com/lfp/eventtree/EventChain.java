@@ -209,7 +209,6 @@ public abstract class EventChain {
         /*已中断和已完成的事件*/
         if (isStarted() && isProcess()) {
             getChainState().isComplete = true;
-
             if (!isInterrupt()) exeCompleteEvent(mState.mCurrentRunEvent);
             if (!isInterrupt()) exeCompleteChain(mState.mCurrentRunEvent);
         }

@@ -1,10 +1,12 @@
 package com.lfp.eventtree;
 
+
 import com.lfp.eventtree.excption.MultiException;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <pre>
@@ -22,7 +24,10 @@ public class EventMerge extends EventChain {
     /**
      * 记录事件集合与事件状态
      */
-    final Map<EventChain, Boolean> mMerge = new HashMap<>();
+    final List<EventChain> mMerge = new ArrayList<>();
+    /*事件计数器，用与识别所有并发事件全部执行完成*/
+    final AtomicInteger mEventCount = new AtomicInteger(0);
+
 
     public EventMerge(EventChain... chains) {
         if (chains != null) {
@@ -30,7 +35,7 @@ public class EventMerge extends EventChain {
                 EventChain event = chains[i];
                 if (event == null) continue;
                 event.addEventChainObserver(mEventChianObserver);
-                mMerge.put(event, false);
+                mMerge.add(event);
             }
         }
     }
@@ -40,7 +45,7 @@ public class EventMerge extends EventChain {
         if (mMerge.isEmpty()) {
             next();
         } else {
-            final Iterator<EventChain> iterator = mMerge.keySet().iterator();
+            final Iterator<EventChain> iterator = mMerge.iterator();
             while (iterator.hasNext()) {
                 iterator.next().start();
             }
@@ -49,7 +54,7 @@ public class EventMerge extends EventChain {
 
     @Override
     public void interrupt() {
-        final Iterator<EventChain> iterator = mMerge.keySet().iterator();
+        final Iterator<EventChain> iterator = mMerge.iterator();
         while (iterator.hasNext()) {
             final EventChain next = iterator.next();
             next.interrupt();
@@ -59,7 +64,7 @@ public class EventMerge extends EventChain {
 
     @Override
     public void complete() {
-        final Iterator<EventChain> iterator = mMerge.keySet().iterator();
+        final Iterator<EventChain> iterator = mMerge.iterator();
         while (iterator.hasNext()) {
             iterator.next().complete();
         }
@@ -82,26 +87,25 @@ public class EventMerge extends EventChain {
         @Override
         public void onError(EventChain event, Throwable e) {
             exception.add(e);
-
             getChainObserverManager().onError(event, e);
-            mMerge.put(event, true);
         }
 
         @Override
         public void onNext(EventChain event) {
             getChainObserverManager().onNext(event);
-            mMerge.put(event, true);
         }
 
         @Override
         public void onChainComplete() {
-            final Iterator<Boolean> iterator = mMerge.values().iterator();
-            while (iterator.hasNext()) {
-                if (!iterator.next()) return;
-            }
+            mEventCount.incrementAndGet();
+
+            if (mMerge.size() < mEventCount.intValue())
+                throw new RuntimeException("并发事件计数器异常！");
+            if (mMerge.size() != mEventCount.intValue()) return;
+
 
             /*全部事件完成*/
-            final Iterator<EventChain> events = mMerge.keySet().iterator();
+            final Iterator<EventChain> events = mMerge.iterator();
             while (events.hasNext()) {
                 final EventChain next = events.next();
 

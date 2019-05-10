@@ -52,7 +52,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void test1(View v) {
         appendTop("事件链");
-        mChain = new DemoEvent("E 1")
+        mChain =
+                DemoEvent.create(
+                new DemoEvent("E 1")
                 .chain(new DemoEvent("E 2"))
                 .chain(new DemoEvent("E 3"))
                 .chain(new DemoEvent("E 4"))
@@ -60,7 +62,10 @@ public class MainActivity extends AppCompatActivity {
                     appendMsg("------- 正在创建事件 E6 -------");
                     return new DemoEvent("E 6");
                 })
-                .chain(new DemoEvent("E 5"));
+                .chain(new DemoEvent("E 5"))
+                )
+        ;
+
         mChain.addEventChainObserver(mEventObserver);//用于监听整个链条的事件
         mChain.start();
     }
@@ -196,6 +201,12 @@ public class MainActivity extends AppCompatActivity {
                         模拟动态事件添加();
                         //是否强制退出事件链
                         appendMsg(MessageFormat.format("{0}:logic 结束  耗时：{1,number,0}ms", info, delay));
+
+//                        if(true){
+//                            complete();
+//                            return;
+//                        }
+
                         if (testInterrupt) interrupt();
                         next();
                     });
