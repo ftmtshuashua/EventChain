@@ -38,8 +38,13 @@ public class MultiException extends RuntimeException {
      * 插入异常信息
      */
     public void put(Throwable t) {
-        if (t != null) arrays.add(t);
-        else {
+        if (t != null) {
+            if (t instanceof MultiException) {
+                final MultiException me = (MultiException) t;
+                arrays.addAll(me.getArray());
+            } else
+                arrays.add(t);
+        } else {
             if (EventChainUtils.isDebug()) System.err.println("不能放入一个空异常信息!");
         }
     }

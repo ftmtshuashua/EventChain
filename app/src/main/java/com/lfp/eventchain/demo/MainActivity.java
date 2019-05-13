@@ -121,7 +121,9 @@ public class MainActivity extends AppCompatActivity {
     /*错误测试*/
     public void test21(View v) {
         appendTop("测试事件");
-        mChain = EventChain.create(
+        mChain =
+                EventChain.create(
+                EventChain.create(
                 EventChain.create(
                         new DemoEvent("E 6")
                                 .chain(
@@ -134,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
                                         )
                                 )
                 )
+        )
         )
         ;
 
