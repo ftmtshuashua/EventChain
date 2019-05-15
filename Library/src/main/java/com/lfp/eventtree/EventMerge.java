@@ -73,7 +73,7 @@ public class EventMerge extends EventChain {
 
 
     private final EventChainObserver mEventChianObserver = new EventChainObserver() {
-        private final MultiException exception = new MultiException();
+        private MultiException exception;
 
         @Override
         public void onChainStart() {
@@ -86,7 +86,9 @@ public class EventMerge extends EventChain {
 
         @Override
         public void onError(EventChain event, Throwable e) {
+            if (exception == null) exception = new MultiException(e);
             exception.put(e);
+
             getChainObserverManager().onError(event, e);
         }
 
@@ -115,7 +117,7 @@ public class EventMerge extends EventChain {
                 }
             }
 
-            if (exception.isEmpty()) {
+            if (exception == null || exception.isEmpty()) {
                 next();
             } else {
                 if (exception.size() == 1) {

@@ -18,20 +18,18 @@ import java.util.Set;
 public class MultiException extends RuntimeException {
     final Set<Throwable> arrays = new HashSet<>();
 
-    public MultiException(String message, Throwable cause) {
-        super(message, cause);
-    }
 
     public MultiException(Throwable cause) {
         super(cause);
     }
 
-    public MultiException(String message) {
-        super(message);
-    }
 
-    public MultiException() {
-        super();
+    /**
+     * 获得导致这个错误的其中一个原因信息
+     */
+    @Override
+    public synchronized Throwable getCause() {
+        return super.getCause();
     }
 
     /**
