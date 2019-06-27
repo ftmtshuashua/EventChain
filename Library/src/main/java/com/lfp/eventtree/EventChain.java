@@ -13,8 +13,9 @@ package com.lfp.eventtree;
 public abstract class EventChain {
 
     // <editor-fold desc="------ Chain ------">
-    private EventChain pre;
-    private EventChain next;
+    private EventChain pre; /*前一个*/
+    private EventChain next; /*后一个*/
+
 
     /*设置事件链中的事件状态*/
     private void setLaterChainState(ChainState state) {
@@ -32,6 +33,8 @@ public abstract class EventChain {
      */
     public EventChain chain(EventChain chain) {
         if (chain == null) return this;
+        checkLoop(chain);
+
         final EventChain first = chain.getFirst();
         final EventChain last = chain.getLast();
         first.pre = this;
@@ -40,8 +43,22 @@ public abstract class EventChain {
             last.next.pre = last;
         }
         this.next = first;
+
+
         chain.setLaterChainState(mState); /*配置链状态*/
         return chain;
+    }
+
+    /*检查循环,死循环导致假死*/
+    private void checkLoop(EventChain chain) {
+        final EventChain last = chain.getLast();
+        EventChain tag = getFirst();
+        do {
+            if (tag == last) { /* Loop */
+                throw new RuntimeException("插入链的时候出现死循环!");
+            }
+            tag = tag.next;
+        } while (tag != null);
     }
 
     /**
