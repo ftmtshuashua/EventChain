@@ -16,7 +16,7 @@ public abstract class EventChain {
     private EventChain pre;
     private EventChain next;
 
-    /*设置事件链中的时间状态*/
+    /*设置事件链中的事件状态*/
     private void setLaterChainState(ChainState state) {
         EventChain event = this;
         while (event != null) {
@@ -99,9 +99,9 @@ public abstract class EventChain {
      *
      * @param eventdelay 事件的创建过程
      */
-    public EventChain chainDelay(EventDelay.OnEventDelayCreate eventdelay) {
+    public EventChain chainDelay(EventDelayCreate.OnEventDelayCreate eventdelay) {
         if (eventdelay == null) return this;
-        return chain(new EventDelay(eventdelay));
+        return chain(new EventDelayCreate(eventdelay));
     }
 
     /**
@@ -173,7 +173,7 @@ public abstract class EventChain {
             if (next != null) {
                 next.run();
             } else {
-                getChainObserverManager().onChainComplete();
+                getChainObserverGroup().onChainComplete();
             }
         }
     }
@@ -208,7 +208,7 @@ public abstract class EventChain {
     public void complete() {
         /*已中断和已完成的事件*/
         if (isStarted() && isProcess()) {
-            getChainState().isComplete = true;
+            mState.isComplete = true;
             if (!isInterrupt()) exeCompleteEvent(mState.mCurrentRunEvent);
             if (!isInterrupt()) exeCompleteChain(mState.mCurrentRunEvent);
         }
@@ -219,7 +219,7 @@ public abstract class EventChain {
      * 中断整个事件链，调用该方法之后后续所有事件和回调将停止
      */
     public void interrupt() {
-        getChainState().isInterrupt = true;
+        mState.isInterrupt = true;
         if (next != null) next.interrupt();
     }
 
@@ -227,32 +227,27 @@ public abstract class EventChain {
      * 判断该事件是否被中断
      */
     public boolean isInterrupt() {
-        return mState.isInterrupt;
+        return mState.isInterrupt();
     }
 
     /**
      * 判断是否强制完成整个事件链
      */
     public boolean isComplete() {
-        return mState.isComplete;
+        return mState.isComplete();
     }
 
     /**
      * 判断该事件是否已开始执行
      */
     public final boolean isStarted() {
-        return mState.isStarted;
+        return mState.isStarted();
     }
 
 
     /*判断时候正常进行后续流程 , 如果事件链为Interrupt或者Complete的情况中断后续业务*/
     public final boolean isProcess() {
         return !isInterrupt() && !isComplete();
-    }
-
-    /*获得事件状态*/
-    public ChainState getChainState() {
-        return mState;
     }
 
     /**
@@ -263,7 +258,7 @@ public abstract class EventChain {
     /**
      * 事件链的状态
      */
-    public static final class ChainState {
+    private static final class ChainState {
         /**
          * 当事件开始之后该值变为true
          */
@@ -296,22 +291,23 @@ public abstract class EventChain {
     // </editor-fold>
 
     // <editor-fold desc="------ Observable ------">
-    private OnEventListenerManager mOnEventListenerManager;
-    private EventChainObserverManager mChainObserverManager;/*链条观察者 ，一个链条中只允许存在一个管理器 ,在链条的顶部*/
+    private EventListenerGroup mOnEventListenerGroup;
+    /*链条观察者 ，一个链条中只允许存在一个管理器 ,在链条的顶部*/
+    private EventChainObserverGroup mChainObserverGroup;
 
 
     /**
      * 获得链条观察者管理器,用于监控链条中事件状态
      */
-    protected final EventChainObserverManager getChainObserverManager() {
+    protected final EventChainObserverGroup getChainObserverGroup() {
         EventChain first = getFirst();
         if (this == first) {
-            if (mChainObserverManager == null) {
-                mChainObserverManager = new EventChainObserverManager();
+            if (mChainObserverGroup == null) {
+                mChainObserverGroup = new EventChainObserverGroup();
             }
-            return mChainObserverManager;
+            return mChainObserverGroup;
         } else {
-            return first.getChainObserverManager();
+            return first.getChainObserverGroup();
         }
     }
 
@@ -319,7 +315,7 @@ public abstract class EventChain {
      * 添加链条事件观察者,具有观察整个链条的能力
      */
     public EventChain addEventChainObserver(EventChainObserver l) {
-        getChainObserverManager().addEventChainObserver(l);
+        getChainObserverGroup().addEventChainObserver(l);
         return this;
     }
 
@@ -327,7 +323,7 @@ public abstract class EventChain {
      * 移除链条事件观察者
      */
     public EventChain removeEventChainObserver(EventChainObserver l) {
-        getChainObserverManager().removeEventChainObserver(l);
+        getChainObserverGroup().removeEventChainObserver(l);
         return this;
     }
 
@@ -346,8 +342,8 @@ public abstract class EventChain {
      * 添加事件监听器
      */
     public EventChain addOnEventListener(OnEventListener l) {
-        if (mOnEventListenerManager == null) mOnEventListenerManager = new OnEventListenerManager();
-        mOnEventListenerManager.addOnEventListener(l);
+        if (mOnEventListenerGroup == null) mOnEventListenerGroup = new EventListenerGroup();
+        mOnEventListenerGroup.addOnEventListener(l);
         return this;
     }
 
@@ -355,23 +351,23 @@ public abstract class EventChain {
      * 移除事件监听器
      */
     public EventChain removeOnEventListener(OnEventListener l) {
-        if (mOnEventListenerManager != null) mOnEventListenerManager.removeOnEventListener(l);
+        if (mOnEventListenerGroup != null) mOnEventListenerGroup.removeOnEventListener(l);
         return this;
     }
 
 
     /*当整个链条开始执行的时候*/
     private void exeStartChain() {
-        getChainObserverManager().onChainStart();
+        getChainObserverGroup().onChainStart();
     }
 
     /*当链条中的事件开始执行*/
     private void exeStartChainEvent() {
-        getChainObserverManager().onStart(this);
+        getChainObserverGroup().onStart(this);
     }
 
     private void exeStartEvent() {
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onStart();
+        if (mOnEventListenerGroup != null) mOnEventListenerGroup.onStart();
     }
 
     protected void exeCompleteChain() {
@@ -379,7 +375,7 @@ public abstract class EventChain {
     }
 
     private static void exeCompleteChain(EventChain event) {
-        event.getChainObserverManager().onChainComplete();
+        event.getChainObserverGroup().onChainComplete();
     }
 
     /*事件完成*/
@@ -392,24 +388,24 @@ public abstract class EventChain {
     private static void exeCompleteEvent(EventChain eventChain) {
         if (eventChain.isCompleteEvent) return;
         eventChain.isCompleteEvent = true;
-        if (eventChain.mOnEventListenerManager != null)
-            eventChain.mOnEventListenerManager.onComplete();
+        if (eventChain.mOnEventListenerGroup != null)
+            eventChain.mOnEventListenerGroup.onComplete();
     }
 
     protected void exeNextChain() {
-        getChainObserverManager().onNext(this);
+        getChainObserverGroup().onNext(this);
     }
 
     protected void exeNextEvent() {
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onNext();
+        if (mOnEventListenerGroup != null) mOnEventListenerGroup.onNext();
     }
 
     protected void exeErrorChain(Throwable e) {
-        getChainObserverManager().onError(this, e);
+        getChainObserverGroup().onError(this, e);
     }
 
     protected void exeErrorEvent(Throwable e) {
-        if (mOnEventListenerManager != null) mOnEventListenerManager.onError(e);
+        if (mOnEventListenerGroup != null) mOnEventListenerGroup.onError(e);
     }
 
 

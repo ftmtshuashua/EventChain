@@ -10,11 +10,11 @@ package com.lfp.eventtree;
  * Created by LiFuPing on 2019/1/12 13:44
  * </pre>
  */
-public class EventDelay extends EventChain {
+public class EventDelayCreate extends EventChain {
 
     private OnEventDelayCreate mOnEventDelay;
 
-    public EventDelay(OnEventDelayCreate delayevent) {
+    public EventDelayCreate(OnEventDelayCreate delayevent) {
         mOnEventDelay = delayevent;
     }
 

@@ -14,12 +14,12 @@ import java.util.List;
  * Created by LiFuPing on 2018/12/20 17:40
  * </pre>
  */
-public class EventChainObserverManager implements EventChainObserver {
+public class EventChainObserverGroup implements EventChainObserver {
 
     List<EventChainObserver> array;
 
-    public EventChainObserverManager() {
-        array = new ArrayList<>();
+    public EventChainObserverGroup() {
+        array = new ArrayList<EventChainObserver>();
     }
 
     public void addEventChainObserver(EventChainObserver l) {

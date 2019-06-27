@@ -81,7 +81,7 @@ public class EventMerge extends EventChain {
 
         @Override
         public void onStart(EventChain event) {
-            getChainObserverManager().onStart(event);
+            getChainObserverGroup().onStart(event);
         }
 
         @Override
@@ -89,12 +89,12 @@ public class EventMerge extends EventChain {
             if (exception == null) exception = new MultiException(e);
             exception.put(e);
 
-            getChainObserverManager().onError(event, e);
+            getChainObserverGroup().onError(event, e);
         }
 
         @Override
         public void onNext(EventChain event) {
-            getChainObserverManager().onNext(event);
+            getChainObserverGroup().onNext(event);
         }
 
         @Override

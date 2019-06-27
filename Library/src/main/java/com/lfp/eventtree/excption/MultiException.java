@@ -1,7 +1,5 @@
 package com.lfp.eventtree.excption;
 
-import com.lfp.eventtree.EventChainUtils;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,8 +40,6 @@ public class MultiException extends RuntimeException {
                 arrays.addAll(me.getArray());
             } else
                 arrays.add(t);
-        } else {
-            if (EventChainUtils.isDebug()) System.err.println("不能放入一个空异常信息!");
         }
     }
 

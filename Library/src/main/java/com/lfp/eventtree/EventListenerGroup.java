@@ -14,12 +14,12 @@ import java.util.List;
  * Created by LiFuPing on 2018/12/20 17:40
  * </pre>
  */
-public class OnEventListenerManager implements OnEventListener {
+public class EventListenerGroup implements OnEventListener {
 
     List<OnEventListener> array;
 
-    public OnEventListenerManager() {
-        array = new ArrayList<>();
+    public EventListenerGroup() {
+        array = new ArrayList<OnEventListener>();
     }
 
     public void addOnEventListener(OnEventListener l) {
