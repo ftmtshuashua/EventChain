@@ -41,8 +41,7 @@ public class ThreadHelper {
      * @param delayMillis 等待时间
      */
     public static final void mainDelayed(Runnable runnable, long delayMillis) {
-        if (Looper.getMainLooper() == Looper.myLooper()) runnable.run();
-        else mHandler.postDelayed(runnable, delayMillis);
+        mHandler.postDelayed(runnable, delayMillis);
     }
 
     /**
