@@ -1,1 +1,1 @@
-include ':app', ':Library', ':JarLibrary'
+include ':app', ':JarLibrary'//, ':Library'
