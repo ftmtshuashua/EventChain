@@ -4,16 +4,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
-import com.lfp.eventtree.EventChain;
-import com.lfp.eventtree.EventChainObserver;
-import com.lfp.eventtree.OnEventFailureListener;
-import com.lfp.eventtree.OnEventListener;
-import com.lfp.eventtree.excption.EventException;
-import com.lfp.eventtree.excption.MultiException;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.lfp.eventchain.EventChain;
+import com.lfp.eventchain.EventChainObserver;
+import com.lfp.eventchain.OnEventFailureListener;
+import com.lfp.eventchain.OnEventListener;
+import com.lfp.eventchain.excption.EventException;
+import com.lfp.eventchain.excption.MultiException;
 
 import java.text.MessageFormat;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
         if (mChain != null) mChain.complete();
     }
 
-
     public void test1(View v) {
         appendTop("事件链");
         mChain =
@@ -66,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                                     return new DemoEvent("E 6");
                                 })
                                 .chain(new DemoEvent("E 5"))
-                )
+                                )
         ;
 
         mChain.addEventChainObserver(mEventObserver);//用于监听整个链条的事件
@@ -81,11 +80,10 @@ public class MainActivity extends AppCompatActivity {
                 , new DemoEvent("E 3")
                 , new DemoEvent("E 4")
                 , new DemoEvent("E 5")
-        );
+                                  );
         mChain.addOnEventListener(new EventLisenter("并发事件"))
                 .start();
     }
-
 
     public void test3(View v) {
         StringBuffer sb = new StringBuffer("复杂业务场景模拟：")
@@ -101,17 +99,17 @@ public class MainActivity extends AppCompatActivity {
                         .merge(
                                 new DemoEvent("小明骑车")
                                 , new DemoEvent("666跑步")
-                        ).chain(
+                              ).chain(
                         new DemoEvent("小明传球")
                                 .chain(new DemoEvent("666接住并传给了小红"))
                                 .chain(new DemoEvent("小红接住准备传给小明").setTestDynamic(true))
-                ).merge(
+                                     ).merge(
                         new DemoEvent("666见状赶紧溜了")
                         , new DemoEvent("小红见状也溜了")
-                ).chain(
+                                            ).chain(
                         new DemoEvent("可怜的小明，终~")
-                )
-        );
+                                                   )
+                                 );
 
 
         mChain.addEventChainObserver(mEventObserver);
@@ -123,21 +121,21 @@ public class MainActivity extends AppCompatActivity {
         appendTop("测试事件");
         mChain =
                 EventChain.create(
-                EventChain.create(
-                EventChain.create(
-                        new DemoEvent("E 6")
-                                .chain(
-                                        EventChain.create(
-                                                new DemoEvent("E 1")
-                                                , new DemoEvent("E 2").setTestExcption(true)
-                                                , new DemoEvent("E 3")
-                                                , new DemoEvent("E 4")
-                                                , new DemoEvent("E 5")
-                                        )
-                                )
-                )
-        )
-        )
+                        EventChain.create(
+                                EventChain.create(
+                                        new DemoEvent("E 6")
+                                                .chain(
+                                                        EventChain.create(
+                                                                new DemoEvent("E 1")
+                                                                , new DemoEvent("E 2").setTestExcption(true)
+                                                                , new DemoEvent("E 3")
+                                                                , new DemoEvent("E 4")
+                                                                , new DemoEvent("E 5")
+                                                                         )
+                                                      )
+                                                 )
+                                         )
+                                 )
         ;
 
         mChain
@@ -215,7 +213,6 @@ public class MainActivity extends AppCompatActivity {
             Utils.log("观察者 - onChainComplete");
         }
     };
-
 
     /*自定义的Demo事件*/
     private class DemoEvent extends EventChain {
@@ -321,8 +318,5 @@ public class MainActivity extends AppCompatActivity {
             ;
         }
     }
-
-
-    
 
 }
