@@ -1,10 +1,10 @@
-package com.lfp.eventchain.demo;
+package com.lfp.eventtree.demo;
 
 import androidx.annotation.NonNull;
 
-import com.lfp.eventchain.EventChain;
-import com.lfp.eventchain.EventChainObserver;
-import com.lfp.eventchain.OnEventListener;
+import com.lfp.eventtree.EventChain;
+import com.lfp.eventtree.EventChainObserver;
+import com.lfp.eventtree.OnEventListener;
 
 /**
  * <pre>

@@ -1,4 +1,4 @@
-package com.lfp.eventchain.demo;
+package com.lfp.eventtree.demo;
 
 import java.util.ArrayList;
 import java.util.Arrays;

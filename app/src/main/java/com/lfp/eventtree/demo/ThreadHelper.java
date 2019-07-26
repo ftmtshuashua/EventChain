@@ -1,4 +1,4 @@
-package com.lfp.eventchain.demo;
+package com.lfp.eventtree.demo;
 
 import android.os.Handler;
 import android.os.Looper;

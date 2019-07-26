@@ -1,4 +1,4 @@
-package com.lfp.eventchain.demo;
+package com.lfp.eventtree.demo;
 
 import android.os.Bundle;
 import android.view.View;
@@ -6,12 +6,12 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.lfp.eventchain.EventChain;
-import com.lfp.eventchain.EventChainObserver;
-import com.lfp.eventchain.OnEventFailureListener;
-import com.lfp.eventchain.OnEventListener;
-import com.lfp.eventchain.excption.EventException;
-import com.lfp.eventchain.excption.MultiException;
+import com.lfp.eventtree.EventChain;
+import com.lfp.eventtree.EventChainObserver;
+import com.lfp.eventtree.OnEventFailureListener;
+import com.lfp.eventtree.OnEventListener;
+import com.lfp.eventtree.excption.EventException;
+import com.lfp.eventtree.excption.MultiException;
 
 import java.text.MessageFormat;
 
