@@ -6,12 +6,12 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.lfp.eventtree.EventChain;
-import com.lfp.eventtree.EventChainObserver;
-import com.lfp.eventtree.OnEventFailureListener;
-import com.lfp.eventtree.OnEventListener;
-import com.lfp.eventtree.excption.EventException;
-import com.lfp.eventtree.excption.MultiException;
+import com.acap.chain.EventChain;
+import com.acap.chain.EventChainObserver;
+import com.acap.chain.OnEventFailureListener;
+import com.acap.chain.OnEventListener;
+import com.acap.chain.excption.EventException;
+import com.acap.chain.excption.MultiException;
 
 import java.text.MessageFormat;
 
