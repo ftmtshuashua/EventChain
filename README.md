@@ -1,4 +1,17 @@
-# EventChain
+
+
+<h1 align="center">EventChain</h1>
+<div align="center">
+
+[![](https://jitpack.io/v/ftmtshuashua/EventChain.svg)](https://jitpack.io/#ftmtshuashua/EventChain)
+
+</div>
+
+将业务逻辑拆分成多个原子事件节点，通过链的方式将这些事件节点拼接在一起来完成该业务逻辑。
+也可以将多个业务逻辑通过链的方式排列组合来达到想要的结果。
+
+
+#
 强大的业务流程处理器基础组件，通过拓展它来实现复杂业务逻辑的流程化处理.
 
 >链式事件处理
@@ -14,7 +27,7 @@
 
 
 ## 使用
-将我们的业务封装为一个[EventChain],实现[call()]()方法.并在[call()]()中处理自己的业务.
+将我们的业务封装为一个<kbd>EventChain</kbd>,实现[call()]()方法.并在[call()]()中处理自己的业务.
 
 1.当业务处理完成请显示调用[next()]()或者[error()]()方法告诉事件链该事件处理完成
 
@@ -33,7 +46,7 @@ allprojects {
     }
 }
 ```
-在Model的build.gradle中添加 [![](https://jitpack.io/v/ftmtshuashua/EventChain.svg)](https://jitpack.io/#ftmtshuashua/EventChain)
+在Model的build.gradle中添加
 ```
 dependencies {
     implementation 'com.github.ftmtshuashua:EventChain:version'

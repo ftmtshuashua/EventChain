@@ -12,7 +12,6 @@ package com.lfp.eventtree;
  */
 public abstract class EventChain {
 
-    // <editor-fold desc="------ Chain ------">
     private EventChain pre; /*前一个*/
     private EventChain next; /*后一个*/
 
@@ -133,7 +132,6 @@ public abstract class EventChain {
 
     // </editor-fold>
 
-    // <editor-fold desc="------ call ------">
     boolean mEventend = false;
 
     /**
@@ -217,7 +215,6 @@ public abstract class EventChain {
 
     // </editor-fold>
 
-    // <editor-fold desc="------ ChainState ------">
 
     /**
      * 强制跳过后续事件，直接完成事件链
@@ -307,7 +304,6 @@ public abstract class EventChain {
     }
     // </editor-fold>
 
-    // <editor-fold desc="------ Observable ------">
     private EventListenerGroup mOnEventListenerGroup;
     /*链条观察者 ，一个链条中只允许存在一个管理器 ,在链条的顶部*/
     private EventChainObserverGroup mChainObserverGroup;
