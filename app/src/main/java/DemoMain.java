@@ -4,6 +4,7 @@ import com.acap.ec.OnChainLogListener;
 import com.acap.ec.OnEventLogListener;
 
 import event.PrintEvent;
+import event.ThreadEvent;
 import event.乘法;
 import event.减法;
 import event.加法;
@@ -34,20 +35,22 @@ public class DemoMain {
          */
         System.out.println("--------------------------------------------------------------");
 
-        ApplyEvent<Integer, Integer> 结果 = EventChain.create(new PrintEvent<Integer>(">> 计算 (x+1)*2+(x+1)*3"))
-                .addOnEventListener(new OnEventLogListener<>("AAAA"))
-                .print("---")
-                .clip(p -> p.get(0))
-                .chain(new 加法(1))
-                .fork(new 乘法(2), new 乘法(3))
-                .clip(p -> p.get(0) + p.get(1))
-                .addOnChainListener(new OnChainLogListener<>("XX"))
-                .print("结果");
+        ApplyEvent<Integer, Integer> 结果 =
+                EventChain.create(new PrintEvent<Integer>(">> 计算 (x+1)*2+(x+1)*3")).clip(p -> p.get(0))
+//                        .chain(new ThreadEvent<>())
+                        .chain(new 加法(1))
+                        .fork(new 乘法(2), new 乘法(3))
+                        .clip(p -> p.get(0) + p.get(1))
+//                        .addOnChainListener(new OnChainLogListener<>(""))
+                        .print("结果");
 
         结果.start(1); // 结果=10
 
+
+
+
         System.out.println("--------------------------------------------------------------");
-        结果.start(2); // 结果=12
+        结果.start(2); // 结果=15
     }
 
 

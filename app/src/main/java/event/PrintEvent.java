@@ -21,6 +21,5 @@ public class PrintEvent<T> extends EventChain<T, T> {
     public void onCall(T params) {
         System.out.println(msg);
         next(params);
-        System.out.println("====");
     }
 }

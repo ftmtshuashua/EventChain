@@ -6,6 +6,8 @@ import com.acap.ec.listener.OnCallLaterListener;
 import com.acap.ec.listener.OnChainListener;
 import com.acap.ec.listener.OnEventListener;
 
+import javax.rmi.CORBA.Util;
+
 /**
  * <pre>
  * Tip:
@@ -18,12 +20,15 @@ import com.acap.ec.listener.OnEventListener;
  */
 public abstract class EventChain<P, R> {
 
-
     /**
      * 代表下一个节点
      */
     private EventChain<R, ?> mNext;
     private P mParams;
+
+    public EventChain<R, ?> getNext() {
+        return mNext;
+    }
 
     /**
      * 停止链上的事件传递
@@ -43,6 +48,8 @@ public abstract class EventChain<P, R> {
             throwable.printStackTrace();
             return;
         }
+
+        throwable = Utils.generateThrowable(throwable, this);
 
         getEL().onError(throwable);
         getChain().getCL().onError(this, throwable);
@@ -187,7 +194,6 @@ public abstract class EventChain<P, R> {
         }));
     }
 
-
     /**
      * 快速创建
      *
@@ -278,5 +284,11 @@ public abstract class EventChain<P, R> {
         getLL().remove(listener);
         return this;
     }
+
+
+    public static final void print(EventChain node) {
+        Utils.print(node);
+    }
+
 }
 

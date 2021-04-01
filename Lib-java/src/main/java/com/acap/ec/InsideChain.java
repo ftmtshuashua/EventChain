@@ -45,16 +45,24 @@ class InsideChain implements OnChainStateChangeListener {
         getCL().add(this);
     }
 
+    public EventChain getFirst() {
+        return mFirst;
+    }
+
     /**
      * 从链头开始启动
      *
      * @param params 链头启动所需要的前置条件
      */
     public void start(Object params) {
-        if (mChainIsStarted) throw new IllegalStateException("准备执行的链正在运行...");
+        EventChain start = this.mFirst;
+
+        if (mChainIsStarted) {
+            throw new IllegalStateException(Utils.generateThrowableMsg("不能开始一个正在运行的链!", mFirst));
+        }
         mIsStop = false;
         getCL().onChainStart();
-        mFirst.perStart(params);
+        start.perStart(params);
     }
 
     /**

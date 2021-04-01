@@ -19,7 +19,11 @@ class Listeners_CL implements OnChainListener {
     /**
      * 链上发生的错误
      */
-    private Throwable mThrowableAtChain;
+    private Throwable mThrowable;
+    /**
+     * 发生错误的节点
+     */
+    private EventChain mThrowableNode;
 
     private final List<OnChainListener> array = new ArrayList<>();
 
@@ -47,7 +51,8 @@ class Listeners_CL implements OnChainListener {
 
     @Override
     public void onError(EventChain node, Throwable throwable) {
-        mThrowableAtChain = throwable;
+        mThrowable = throwable;
+        mThrowableNode = node;
         for (int i = 0; i < array.size(); i++) {
             array.get(i).onError(node, throwable);
         }
@@ -71,8 +76,16 @@ class Listeners_CL implements OnChainListener {
     /**
      * 获得链上发生的错误
      */
-    public Throwable getThrowableAtChain() {
-        return mThrowableAtChain;
+    public Throwable getThrowable() {
+        return mThrowable;
+    }
+
+
+    /**
+     * 获得链上发生错误的节点
+     */
+    public EventChain getThrowableNode() {
+        return mThrowableNode;
     }
 
 }

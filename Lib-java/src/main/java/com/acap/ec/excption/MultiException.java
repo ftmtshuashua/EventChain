@@ -18,12 +18,6 @@ public class MultiException extends RuntimeException {
     public MultiException() {
     }
 
-    public MultiException(Throwable cause) {
-        super(cause);
-        put(cause);
-    }
-
-
     /**
      * 获得导致这个错误的第一个原因
      */
@@ -34,14 +28,16 @@ public class MultiException extends RuntimeException {
 
     /**
      * 插入一个异常信息
+     *
+     * @param throwable 错误信息
      */
     public void put(Throwable throwable) {
         if (throwable != null) {
             if (throwable instanceof MultiException) {
-                final MultiException me = (MultiException) throwable;
-                arrays.addAll(me.getArray());
-            } else
+                arrays.addAll(((MultiException) throwable).getArray());
+            } else {
                 arrays.add(throwable);
+            }
         }
     }
 
@@ -79,12 +75,13 @@ public class MultiException extends RuntimeException {
         if (size() <= 1) {
             getFirst().printStackTrace();
         } else {
-            System.err.println("↓↓↓↓↓↓↓↓↓↓ " + getMessage() + " ↓↓↓↓↓↓↓↓↓↓");
-            for (Throwable t : arrays) {
-                t.printStackTrace();
-                System.err.println("------------------------------------");
+            String message = getMessage();
+            System.err.println("↓↓↓↓↓↓↓↓↓↓ " + message + " ↓↓↓↓↓↓↓↓↓↓");
+            for (int i = 0; i < arrays.size(); i++) {
+                if (i != 0) System.err.println("------------------------------------");
+                arrays.get(i).printStackTrace();
             }
-            System.err.println("↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑");
+            System.err.println("↑↑↑↑↑↑↑↑↑↑ " + message + " ↑↑↑↑↑↑↑↑↑↑");
         }
     }
 
@@ -98,4 +95,11 @@ public class MultiException extends RuntimeException {
             return "链中包含 " + arrays.size() + " 个异常需要处理!";
         }
     }
+
+
+    private static final String getObjectId(Object object) {
+        if (object == null) return "Null_Obj";
+        return object.getClass().getSimpleName() + "(" + Integer.toHexString(System.identityHashCode(object)) + ")";
+    }
+
 }
