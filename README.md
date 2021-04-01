@@ -1,5 +1,12 @@
 
 
+<div align="center">
+
+
+![EventChain](https://github.com/ftmtshuashua/EventChain/blob/master/resouce/flow.png)
+
+</div>
+
 <h1 align="center">EventChain</h1>
 <div align="center">
 
@@ -20,7 +27,6 @@
 - 增加事件间的数据传递
 
 
-![EventChain](https://github.com/ftmtshuashua/EventChain/blob/master/resouce/flow.png)
 
 
 ## 使用
