@@ -13,32 +13,30 @@
 
 #
 强大的业务流程处理器基础组件，通过拓展它来实现复杂业务逻辑的流程化处理.
-
->链式事件处理
-
->支持事件并发
-
->支持事件动态修改
-
->源生Java实现
+- 源生Java实现
+- 链式事件处理
+- 支持事件并发
+- 支持事件动态插入
+- 增加事件间的数据传递
 
 
 ![EventChain](https://github.com/ftmtshuashua/EventChain/blob/master/resouce/flow.png)
 
 
 ## 使用
-将我们的业务封装为一个<kbd>EventChain</kbd>,实现[call()]()方法.并在[call()]()中处理自己的业务.
+将我们的业务封装为一个<kbd>EventChain</kbd>,实现[onCall()]()方法.并在[onCall()]()中处理自己的业务.
+>每一个事件都有自己的入参的出参，根据需求指定他们.
 
-1.当业务处理完成请显示调用[next()]()或者[error()]()方法告诉事件链该事件处理完成
+- [next()]():当前事件处理完成向下传递信号
+- [error()]():当前事件处理失败，抛出异常信息
+- [result()]():抛出事件的结果，但是不发送向下传递信号
+- [stop()]():停止链上事件,事件信号将不会向下传递
 
-2.[interrupt()]()方法被调用之后的所有回调都不会再发送
-
-3.[complete()]()方法被调用之后将立即完成当前正在执行的事件,并完成整个事件链
 
 
 ## 配置依赖
 
-在项目的build.gradle中添加
+
 ```
 allprojects {
     repositories {
@@ -52,26 +50,3 @@ dependencies {
     implementation 'com.github.ftmtshuashua:EventChain:version'
 }
 ```
-
-
-## LICENSE
-
-```
-Copyright (c) 2018-present, EventChain Contributors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
-
-
-
-
