@@ -6,8 +6,6 @@ import com.acap.ec.listener.OnCallLaterListener;
 import com.acap.ec.listener.OnChainListener;
 import com.acap.ec.listener.OnEventListener;
 
-import javax.rmi.CORBA.Util;
-
 /**
  * <pre>
  * Tip:
@@ -204,6 +202,18 @@ public abstract class EventChain<P, R> {
     public static final <P, R> EventFork<P, R> create(EventChain<? super P, ? extends R>... nodes) {
         return new EventFork(nodes);
     }
+
+    /**
+     * 快捷的发送信号
+     *
+     * @param r1
+     * @param <Result>
+     * @return
+     */
+    public static final <Result> ApplyEvent<Object, Result> just(Result r1) {
+        return new ApplyEvent<>(params -> r1);
+    }
+
 
     private InsideChain mChain;
 
