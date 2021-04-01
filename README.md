@@ -10,7 +10,11 @@
 <h1 align="center">EventChain</h1>
 <div align="center">
 
+![](https://img.shields.io/badge/android-1.0%2B-blue)
 [![](https://jitpack.io/v/ftmtshuashua/EventChain.svg)](https://jitpack.io/#ftmtshuashua/EventChain)
+[![License Apache2.0](http://img.shields.io/badge/license-Apache2.0-brightgreen.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0.html)
+
+
 
 </div>
 
