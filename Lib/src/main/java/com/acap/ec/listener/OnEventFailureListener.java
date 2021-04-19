@@ -11,12 +11,12 @@ package com.acap.ec.listener;
  * </pre>
  */
 @FunctionalInterface
-public interface OnEventFailureListener extends OnEventListener<Object> {
+public interface OnEventFailureListener<R> extends OnEventListener<R> {
     @Override
     void onError(Throwable e);
 
     @Override
-    default void onNext(Object result) {
+    default void onNext(R result) {
     }
 
     @Override

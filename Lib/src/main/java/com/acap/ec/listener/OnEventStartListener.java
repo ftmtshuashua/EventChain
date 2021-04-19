@@ -12,7 +12,7 @@ package com.acap.ec.listener;
  * </pre>
  */
 @FunctionalInterface
-public interface OnEventStartListener extends OnEventListener<Object> {
+public interface OnEventStartListener<R> extends OnEventListener<R> {
 
     /**
      * 在时间开始之前调用。一个事件或者事件链只会调用一次
@@ -25,7 +25,7 @@ public interface OnEventStartListener extends OnEventListener<Object> {
     }
 
     @Override
-    default void onNext(Object result) {
+    default void onNext(R result) {
     }
 
     @Override
