@@ -1,10 +1,9 @@
-import com.acap.ec.ApplyEvent;
-import com.acap.ec.EventChain;
-import com.acap.ec.OnChainLogListener;
-import com.acap.ec.OnEventLogListener;
+import com.acap.ec.Event;
+
+import org.w3c.dom.Text;
 
 import event.PrintEvent;
-import event.ThreadEvent;
+import event.TypeEvent;
 import event.乘法;
 import event.减法;
 import event.加法;
@@ -23,7 +22,6 @@ public class DemoMain {
         //构建事件链条
         new PrintEvent<Integer>(">> 计算 (x+5+5)*2-3")    //打印
                 .chain(new 加法(5))    //执行加法运算，等同于 1+5
-                .addOnCallBeforeListener(node -> node.insert(new 加法(5))) //在节点后面插入一个新节点到他后面，等同于 (1+5)+5
                 .chain(new 乘法(2))  // ((1+5)+5)*2
                 .chain(new 减法(3))   // ((1+5)+5)*2-3
                 .print("结果")//结果 = 21
@@ -35,22 +33,29 @@ public class DemoMain {
          */
         System.out.println("--------------------------------------------------------------");
 
-        ApplyEvent<Integer, Integer> 结果 =
-                EventChain.create(new PrintEvent<Integer>(">> 计算 (x+1)*2+(x+1)*3")).clip(p -> p.get(0))
-//                        .chain(new ThreadEvent<>())
-                        .chain(new 加法(1))
-                        .fork(new 乘法(2), new 乘法(3))
-                        .clip(p -> p.get(0) + p.get(1))
-//                        .addOnChainListener(new OnChainLogListener<>(""))
-                        .print("结果");
+//        ApplyEvent<Integer, Integer> 结果 =
+//                Event.create(new PrintEvent<Integer>(">> 计算 (x+1)*2+(x+1)*3")).apply(p -> p.get(0))
+////                        .chain(new ThreadEvent<>())
+//                        .chain(new 加法(1))
+//                        .merge(new 乘法(2), new 乘法(3),new TypeEvent<Integer,Integer>())
+//                        .apply(p -> (int)p.get(0) + (int)p.get(1))
+////                        .addOnChainListener(new OnChainLogListener<>(""))
+//                        .print("结果");
+//
+//        结果.start(1); // 结果=10
+//        System.out.println("--------------------------------------------------------------");
+//        结果.start(2); // 结果=15
 
-        结果.start(1); // 结果=10
+
+        Event.create(new PrintEvent<Integer>(">> 计算 (x+1)*2+(x+1)*3"))
+                .apply(p -> p[0])
+                .merge(new 乘法(2), new 乘法(3), new TypeEvent<Integer, TypeEvent>())
+                .apply(P -> (Integer) P[0])
+                .oneOf(new 乘法(2), new 乘法(3), new TypeEvent<Integer, Text>())
+
+                .start();
 
 
-
-
-        System.out.println("--------------------------------------------------------------");
-        结果.start(2); // 结果=15
     }
 
 

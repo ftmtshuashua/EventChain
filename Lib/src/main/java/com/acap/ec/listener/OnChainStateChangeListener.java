@@ -1,6 +1,6 @@
 package com.acap.ec.listener;
 
-import com.acap.ec.EventChain;
+import com.acap.ec.Event;
 
 /**
  * <pre>
@@ -18,16 +18,16 @@ public interface OnChainStateChangeListener<R> extends OnChainListener<R> {
     }
 
     @Override
-    default void onStart(EventChain node) {
+    default void onStart(Event event) {
     }
 
     @Override
-    default void onError(EventChain node, Throwable throwable) {
+    default void onError(Event event, Throwable throwable) {
 
     }
 
     @Override
-    default void onNext(EventChain node, R result) {
+    default void onNext(Event event, R result) {
 
     }
 

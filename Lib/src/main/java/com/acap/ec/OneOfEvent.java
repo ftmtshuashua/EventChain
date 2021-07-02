@@ -1,6 +1,6 @@
 package com.acap.ec;
 
-import com.acap.ec.excption.MultiException;
+import com.acap.ec.excption.MergeException;
 import com.acap.ec.listener.OnChainListener;
 
 import java.util.ArrayList;
@@ -17,17 +17,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by ACap on 2021/3/31 10:33
  * </pre>
  */
-public class EventFork<P, R> extends EventChain<P, List<R>> {
-    private final List<EventChain<P, R>> mFork = new ArrayList<>();
-    private final Map<EventChain<P, R>, R> mForkResults = new HashMap<>();
+public class OneOfEvent<P, R> extends Event<P, R> {
+    private final List<Event<P, R>> mFork = new ArrayList<>();
+    private final Map<Event<P, R>, R> mForkResults = new HashMap<>();
 
     /*事件计数器，用与识别所有并发事件全部执行完成*/
     private final AtomicInteger mForkResultCount = new AtomicInteger(0);
 
-    public EventFork(EventChain<P, ? extends R>... chains) {
+    public OneOfEvent(Event<P, ? extends R>... chains) {
         if (chains != null) {
             for (int i = 0; i < chains.length; i++) {
-                EventChain event = chains[i];
+                Event event = chains[i];
                 if (event == null) continue;
                 event.addOnChainListener(mChainListener);
                 mFork.add(event);
@@ -62,17 +62,17 @@ public class EventFork<P, R> extends EventChain<P, List<R>> {
         }
 
         @Override
-        public void onStart(EventChain node) {
+        public void onStart(Event node) {
             getChain().getCL().onStart(node);
         }
 
         @Override
-        public void onError(EventChain node, Throwable throwable) {
+        public void onError(Event node, Throwable throwable) {
             getChain().getCL().onError(node, throwable);
         }
 
         @Override
-        public void onNext(EventChain node, R result) {
+        public void onNext(Event node, R result) {
             mForkResults.put(node, result);
             getChain().getCL().onNext(node, result);
         }
@@ -90,7 +90,7 @@ public class EventFork<P, R> extends EventChain<P, List<R>> {
             for (int i = 0; i < size; i++) {
                 Listeners_CL chain = mFork.get(i).getChain().getCL();
                 Throwable err = chain.getThrowable();
-                EventChain node = chain.getThrowableNode();
+                Event node = chain.getThrowableNode();
                 if (err != null) {
                     throwable.add(err);
                 }
@@ -99,7 +99,7 @@ public class EventFork<P, R> extends EventChain<P, List<R>> {
             //如果有异常就抛出错误
             if (throwable.isEmpty()) {
                 List<R> result = new ArrayList<>();
-                for (EventChain<P, ? extends R> eventChain : mFork) {
+                for (Event<P, ? extends R> eventChain : mFork) {
                     result.add(mForkResults.get(eventChain));
                 }
                 next(result);
@@ -107,7 +107,7 @@ public class EventFork<P, R> extends EventChain<P, List<R>> {
                 if (throwable.size() == 1) {
                     error(throwable.get(0));
                 } else {
-                    MultiException exception = new MultiException();
+                    MergeException exception = new MergeException();
                     for (int i = 0; i < throwable.size(); i++) {
                         Throwable err = throwable.get(i);
                         exception.put(err);
@@ -119,7 +119,7 @@ public class EventFork<P, R> extends EventChain<P, List<R>> {
     };
 
 
-    public List<EventChain<P, R>> getForkNode() {
+    public List<Event<P, R>> getForkNode() {
         return mFork;
     }
 

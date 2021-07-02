@@ -1,6 +1,6 @@
 package com.acap.ec.listener;
 
-import com.acap.ec.EventChain;
+import com.acap.ec.Event;
 
 /**
  * <pre>
@@ -21,25 +21,25 @@ public interface OnChainListener<R> {
     /**
      * 当事件链中某个事件开始执行
      *
-     * @param node 执行的节点
+     * @param event 执行的节点
      */
-    void onStart(EventChain node);
+    void onStart(Event event);
 
     /**
      * 当事件链中某个事件执行错误
      *
-     * @param node      执行的节点
+     * @param event     执行的节点
      * @param throwable 节点抛出的异常信息
      */
-    void onError(EventChain node, Throwable throwable);
+    void onError(Event event, Throwable throwable);
 
     /**
      * 当事件链中某个事件执行结束
      *
-     * @param node   执行的节点
+     * @param event  执行的节点
      * @param result 节点的产物
      */
-    void onNext(EventChain node, R result);
+    void onNext(Event event, R result);
 
     /**
      * 当事件链结束,一个链条只会回调一次该方法

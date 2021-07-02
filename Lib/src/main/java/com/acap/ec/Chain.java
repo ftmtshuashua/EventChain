@@ -1,25 +1,26 @@
 package com.acap.ec;
 
 import com.acap.ec.listener.OnChainStateChangeListener;
+import com.acap.ec.utils.EUtils;
 
 import java.util.LinkedList;
 
 /**
  * <pre>
  * Tip:
- *      链的信息储存器，保存了链的完整信息
+ *      这是一条链，在链上附加的事件将会按顺序依次执行，知道链上最后一个事件完成
  *
  * Created by ACap on 2021/3/29 18:44
  * </pre>
  */
-class InsideChain implements OnChainStateChangeListener {
+public class Chain implements OnChainStateChangeListener {
 
-    private LinkedList<EventChain> mArray = new LinkedList<>();
+    private LinkedList<Event> mArray = new LinkedList<>();
 
     /**
      * 链头，一条链上只有一个链头，在链中任何节点调用开始方法都将从链头开始
      */
-    private EventChain mFirst;
+    private Event mFirst;
 
     /**
      * 链被终止的标志位，如果为true表示链被终止，链中未执行的节点将不会接收到开始信号    *
@@ -36,7 +37,7 @@ class InsideChain implements OnChainStateChangeListener {
         return mCL;
     }
 
-    public InsideChain(EventChain first) {
+    public Chain(Event first) {
         this.mFirst = first;
         init();
     }
@@ -45,7 +46,7 @@ class InsideChain implements OnChainStateChangeListener {
         getCL().add(this);
     }
 
-    public EventChain getFirst() {
+    public Event getFirst() {
         return mFirst;
     }
 
@@ -55,10 +56,10 @@ class InsideChain implements OnChainStateChangeListener {
      * @param params 链头启动所需要的前置条件
      */
     public void start(Object params) {
-        EventChain start = this.mFirst;
+        Event start = this.mFirst;
 
         if (mChainIsStarted) {
-            throw new IllegalStateException(Utils.generateThrowableMsg("不能开始一个正在运行的链!", mFirst));
+            throw new IllegalStateException(EUtils.generateThrowableMsg("不能开始一个正在运行的链!", mFirst));
         }
         mIsStop = false;
         getCL().onChainStart();

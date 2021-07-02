@@ -10,7 +10,7 @@ import com.acap.ec.action.Apply;
  * Created by ACap on 2021/3/31 16:17
  * </pre>
  */
-public class ApplyEvent<P, R> extends EventChain<P, R> {
+public class ApplyEvent<P, R> extends Event<P, R> {
     private Apply<P, R> apply;
 
     public ApplyEvent(Apply<P, R> apply) {

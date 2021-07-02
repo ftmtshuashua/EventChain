@@ -1,6 +1,6 @@
-package com.acap.ec;
+package com.acap.ec.listener;
 
-import com.acap.ec.listener.OnEventListener;
+import com.acap.ec.utils.EUtils;
 
 /**
  * <pre>
@@ -20,23 +20,23 @@ public class OnEventLogListener<R> implements OnEventListener<R> {
 
     @Override
     public void onStart() {
-        Utils.i(mTag, "onStart()");
+        EUtils.i(mTag, "onStart()");
 
     }
 
     @Override
     public void onError(Throwable e) {
-        Utils.e(mTag, "onError(" + e + ")");
+        EUtils.e(mTag, "onError(" + e + ")");
     }
 
     @Override
     public void onNext(R result) {
-        Utils.i(mTag, "onNext(" + result + ")");
+        EUtils.i(mTag, "onNext(" + result + ")");
     }
 
     @Override
     public void onComplete() {
-        Utils.i(mTag, "onComplete()");
+        EUtils.i(mTag, "onComplete()");
     }
 
 }

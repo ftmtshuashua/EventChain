@@ -1,6 +1,6 @@
 package event;
 
-import com.acap.ec.EventChain;
+import com.acap.ec.Event;
 
 /**
  * <pre>
@@ -10,7 +10,7 @@ import com.acap.ec.EventChain;
  * Created by ACap on 2021/3/31 15:24
  * </pre>
  */
-public class TypeEvent<P, R> extends EventChain<P, R> {
+public class TypeEvent<P, R> extends Event<P, R> {
     @Override
     protected void onCall(P params) {
         next(null);

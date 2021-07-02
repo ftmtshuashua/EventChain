@@ -1,6 +1,6 @@
 package event;
 
-import com.acap.ec.EventChain;
+import com.acap.ec.Event;
 
 /**
  * <pre>
@@ -10,7 +10,7 @@ import com.acap.ec.EventChain;
  * Created by ACap on 2021/3/30 14:05
  * </pre>
  */
-public class 减法 extends EventChain<Integer, Integer> {
+public class 减法 extends Event<Integer, Integer> {
 
     int value;
 

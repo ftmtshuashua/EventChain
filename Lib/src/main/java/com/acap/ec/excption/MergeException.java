@@ -12,10 +12,10 @@ import java.util.List;
  * Created by ACap on 2021/3/29 18:12
  * </pre>
  */
-public class MultiException extends RuntimeException {
+public class MergeException extends RuntimeException {
     private final ArrayList<Throwable> arrays = new ArrayList<>();
 
-    public MultiException() {
+    public MergeException() {
     }
 
     /**
@@ -33,8 +33,8 @@ public class MultiException extends RuntimeException {
      */
     public void put(Throwable throwable) {
         if (throwable != null) {
-            if (throwable instanceof MultiException) {
-                arrays.addAll(((MultiException) throwable).getArray());
+            if (throwable instanceof MergeException) {
+                arrays.addAll(((MergeException) throwable).getArray());
             } else {
                 arrays.add(throwable);
             }
