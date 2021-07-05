@@ -14,17 +14,34 @@ import com.acap.ec.listener.OnEventListener;
 public class LazyEvent<P, R> extends Event<P, R> {
     private CallBack<Event<P, R>> mEventAction;
 
+    private Event<P, R> mRunning;
+
     public LazyEvent(CallBack<Event<P, R>> action) {
         this.mEventAction = action;
     }
 
     @Override
     protected void onCall(P params) {
-        Event<P, R> call = mEventAction.call();
-        call.addOnEventListener(mOnEventListener);
-        call.start(params);
+        mRunning = mEventAction.call();
+        mRunning.addOnEventListener(mOnEventListener);
+        mRunning.start(params);
     }
 
+    @Override
+    public void finish() {
+        super.finish();
+        if (mRunning != null) {
+            mRunning.finish();
+        }
+    }
+
+    @Override
+    protected void onInterrupt() {
+        super.onInterrupt();
+        if (mRunning != null) {
+            mRunning.interrupt();
+        }
+    }
 
     private OnEventListener<R> mOnEventListener = new OnEventListener<R>() {
 
