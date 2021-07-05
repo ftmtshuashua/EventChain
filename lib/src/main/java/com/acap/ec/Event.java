@@ -206,7 +206,7 @@ public abstract class Event<P, R> {
     /**
      * 从链头开始执行链上的逻辑
      */
-    public void start() {
+    public final void start() {
         start(null);
     }
 
@@ -215,7 +215,7 @@ public abstract class Event<P, R> {
      *
      * @param params 启动链所需要的前置参数
      */
-    public void start(Object params) {
+    public final void start(Object params) {
         getChain().start(params);
     }
 
@@ -366,9 +366,13 @@ public abstract class Event<P, R> {
      * @param throwable 事件中发生的错误
      */
     protected synchronized void error(Throwable throwable) {
-        if (getChain().isFinish() || isComplete()) return;
-
-        performEventError(throwable);
+        if (isComplete()) return;
+        if (getChain().isFinish()) {
+            performEventComplete();
+            performChainComplete();
+        } else {
+            performEventError(throwable);
+        }
     }
 
     /**
@@ -384,9 +388,13 @@ public abstract class Event<P, R> {
      * @param result 想下一个事件发送的参数
      */
     protected synchronized void next(R result) {
-        if (getChain().isFinish() || isComplete()) return;
-
-        performEventNext(result);
+        if (isComplete()) return;
+        if (getChain().isFinish()) {
+            performEventComplete();
+            performChainComplete();
+        } else {
+            performEventNext(result);
+        }
     }
 
 
