@@ -68,9 +68,9 @@ public class EUtils {
      */
     public static void e(String tag, String msg) {
         if (isEmpty(tag)) {
-            System.err.println(String.format("Error - %s:%s", TAG, msg));
+            System.err.println(String.format("%s:%s", TAG, msg));
         } else {
-            System.err.println(String.format("Error - %s-%s:%s", TAG, tag, msg));
+            System.err.println(String.format("%s-%s:%s", TAG, tag, msg));
         }
     }
 

@@ -12,7 +12,7 @@ package com.acap.ec.listener;
  * </pre>
  */
 @FunctionalInterface
-public interface OnEventCompleteListener<R> extends OnEventListener<R> {
+public interface OnEventCompleteListener<P,R> extends OnEventListener<P,R> {
 
     /**
      * 在时间结束之后调用。一个事件或者事件链只会调用一次
@@ -22,7 +22,7 @@ public interface OnEventCompleteListener<R> extends OnEventListener<R> {
 
 
     @Override
-    default void onStart() {
+    default void onStart(P params) {
     }
 
     @Override

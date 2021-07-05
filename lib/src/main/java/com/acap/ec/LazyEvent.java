@@ -43,10 +43,11 @@ public class LazyEvent<P, R> extends Event<P, R> {
         }
     }
 
-    private OnEventListener<R> mOnEventListener = new OnEventListener<R>() {
+    private OnEventListener mOnEventListener = new OnEventListener<P, R>() {
+
 
         @Override
-        public void onStart() {
+        public void onStart(P params) {
 
         }
 
@@ -54,6 +55,7 @@ public class LazyEvent<P, R> extends Event<P, R> {
         public void onError(Throwable e) {
             LazyEvent.this.error(e);
         }
+
 
         @Override
         public void onNext(R result) {

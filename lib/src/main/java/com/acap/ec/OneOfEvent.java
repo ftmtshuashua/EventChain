@@ -1,6 +1,7 @@
 package com.acap.ec;
 
 import com.acap.ec.listener.OnChainListener;
+import com.acap.ec.utils.EUtils;
 import com.acap.ec.utils.ListMap;
 
 import java.util.ArrayList;
@@ -68,6 +69,12 @@ public class OneOfEvent<P, R> extends Event<P, R> {
 
 
     private final OnChainListener mChainListener = new OnChainListener<R>() {
+
+        private boolean mIsError = false;
+        private Event node;
+        private Throwable throwable;
+        private R result;
+
         @Override
         public void onChainStart() {
         }
@@ -78,21 +85,33 @@ public class OneOfEvent<P, R> extends Event<P, R> {
         }
 
         @Override
-        public void onError(Event node, Throwable throwable) {
+        public synchronized void onError(Event node, Throwable throwable) {
+            EUtils.i("---- OnError:" + EUtils.id(node));
             interruptChildrenEvent();
-            OneOfEvent.this.error(throwable);
-            getChain().onError(node, throwable);
+            this.mIsError = true;
+            this.node = node;
+            this.throwable = throwable;
         }
 
         @Override
-        public void onNext(Event node, R result) {
+        public synchronized void onNext(Event node, R result) {
+            EUtils.i("---- onNext:" + EUtils.id(node));
             interruptChildrenEvent();
-            OneOfEvent.this.next(result);
-            getChain().onNext(node, result);
+            this.mIsError = false;
+            this.node = node;
+            this.result = result;
         }
 
         @Override
         public void onChainComplete() {
+            EUtils.e("---- OnError:" + EUtils.id(OneOfEvent.this));
+            if (mIsError) {
+                getChain().onError(node, throwable);
+                OneOfEvent.this.error(throwable);
+            } else {
+                getChain().onNext(node, result);
+                OneOfEvent.this.next(result);
+            }
         }
     };
 

@@ -32,7 +32,7 @@ public abstract class Event<P, R> {
     /**
      * 事件回调监听器集合
      */
-    private final ListenerMap<OnEventListener<R>> mOnEventListeners = new ListenerMap<>();
+    private final ListenerMap<OnEventListener<P, R>> mOnEventListeners = new ListenerMap<>();
 
     /**
      * 当前事件是否完成的状态。如果它为{@code true}，那么{@link #next(Object)}和{@link #error(Throwable)}的调用将不会生效
@@ -230,7 +230,7 @@ public abstract class Event<P, R> {
 
         mIsStarted = true;
 
-        mOnEventListeners.map(listener -> listener.onStart());
+        mOnEventListeners.map(listener -> listener.onStart(params));
         onCall(params);
     }
 
@@ -241,16 +241,35 @@ public abstract class Event<P, R> {
         getChain().finish();
     }
 
+
+    /**
+     * 执行事件中断的逻辑
+     */
+    final void performEventInterrupt() {
+        onInterrupt();
+
+        EventInterruptException throwable = new EventInterruptException();
+        getChain().onError(this, throwable);
+        mOnEventListeners.map(listener -> listener.onError(throwable));
+
+        performEventComplete();
+        performChainComplete();
+    }
+
     /**
      * 事件抛出错误,发生错误的事件将不会执行后续事件，并直接完成事件所在的链
      */
     final void performEventError(Throwable throwable) {
         performEventCompleteStateChange();
-        mOnEventListeners.map(listener -> listener.onError(throwable));
-        getChain().onError(this, throwable);
+        if (getChain().isInterrupt()) {
+            performEventInterrupt();
+        } else {
+            getChain().onError(this, throwable);
+            mOnEventListeners.map(listener -> listener.onError(throwable));
 
-        performEventComplete();
-        performChainComplete();
+            performEventComplete();
+            performChainComplete();
+        }
     }
 
     /**
@@ -259,13 +278,12 @@ public abstract class Event<P, R> {
      * @param result
      */
     final void performEventNext(R result) {
+        performEventCompleteStateChange();
         if (getChain().isInterrupt()) {
-            onInterrupt();
-            error(new EventInterruptException());
+            performEventInterrupt();
         } else {
-            performEventCompleteStateChange();
-            mOnEventListeners.map(listener -> listener.onNext(result));
             getChain().onNext(this, result);
+            mOnEventListeners.map(listener -> listener.onNext(result));
 
             performEventComplete();
             if (mNext != null) {
@@ -388,7 +406,7 @@ public abstract class Event<P, R> {
      *
      * @param listener
      */
-    public <T extends Event<P, R>> T addOnEventListener(OnEventListener<R> listener) {
+    public <T extends Event<P, R>> T addOnEventListener(OnEventListener<P, R> listener) {
         mOnEventListeners.register(listener);
         return (T) this;
     }
@@ -398,7 +416,7 @@ public abstract class Event<P, R> {
      *
      * @param listener
      */
-    public Event<P, R> removeOnEventListener(OnEventListener<R> listener) {
+    public Event<P, R> removeOnEventListener(OnEventListener listener) {
         mOnEventListeners.unregister(listener);
         return this;
     }
@@ -408,7 +426,7 @@ public abstract class Event<P, R> {
      *
      * @param listener
      */
-    public Event<P, R> addOnChainListener(OnChainListener<R> listener) {
+    public Event<P, R> addOnChainListener(OnChainListener listener) {
         getChain().register(listener);
         return this;
     }
@@ -418,7 +436,7 @@ public abstract class Event<P, R> {
      *
      * @param listener
      */
-    public Event<P, R> removeOnChainListener(OnChainListener<R> listener) {
+    public Event<P, R> removeOnChainListener(OnChainListener listener) {
         getChain().unregister(listener);
         return this;
     }

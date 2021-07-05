@@ -1,9 +1,9 @@
-package mode;
+package com.acap.demo.mode;
 
 /**
  * <pre>
  * Tip:
- *      通过Token获得的用户详情
+ *      用户信息
  *
  * Created by ACap on 2021/7/3 16:50
  * </pre>

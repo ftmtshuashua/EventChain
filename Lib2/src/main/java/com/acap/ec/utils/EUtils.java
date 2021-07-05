@@ -72,7 +72,7 @@ public class EUtils {
                 printNext(ev);
             }
         } else {
-//            i("Print", event.getNext());
+//            i("Print", com.acap.demo.event.getNext());
         }
         print(event.getNext());
     }

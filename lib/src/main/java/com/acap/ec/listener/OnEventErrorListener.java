@@ -11,7 +11,7 @@ package com.acap.ec.listener;
  * </pre>
  */
 @FunctionalInterface
-public interface OnEventErrorListener<R> extends OnEventListener<R> {
+public interface OnEventErrorListener<P,R> extends OnEventListener<P,R> {
     @Override
     void onError(Throwable e);
 
@@ -24,6 +24,6 @@ public interface OnEventErrorListener<R> extends OnEventListener<R> {
     }
 
     @Override
-    default void onStart() {
+    default void onStart(P params) {
     }
 }

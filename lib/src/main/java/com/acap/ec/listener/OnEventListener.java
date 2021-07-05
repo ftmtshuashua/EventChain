@@ -16,12 +16,14 @@ package com.acap.ec.listener;
  * Created by ACap on 2021/3/29 18:12
  * </pre>
  */
-public interface OnEventListener<R> {
+public interface OnEventListener<P, R> {
 
     /**
-     * 当事件开始
+     * 事件开始执行的信号
+     *
+     * @param params 入参
      */
-    void onStart();
+    void onStart(P params);
 
     /**
      * 当事件处理失败，并返回了失败的错误
