@@ -30,6 +30,8 @@ import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <pre>
@@ -50,6 +52,7 @@ public class DemoActivity extends Activity {
     private ScrollView mV_Scroll;
     private Button mV_Button;
     private Event mDemoEvent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,13 +64,14 @@ public class DemoActivity extends Activity {
 
         Glide.with(this).load(R.drawable.icon_loading).into(mV_Loading);
 
-        new E1_UserLogin()
-                .addOnEventListener(new OnEventLogListener<>(""))
-                .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> {
 
-                })
-        ;
+        //TODO:参数异常
+        E2_GetUserDetail chain =
+                new E1_UserLogin()
+                .chain(new E2_GetUserDetail());
 
+
+        //TODO:Java泛型数组安全性问题 - https://blog.csdn.net/zxm317122667/article/details/78400398
         mDemoEvent = new E1_UserLogin()
                 .addOnEventListener(new OnEventLogListener<>("E1_UserLogin"))
                 .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> print_clear())
@@ -83,9 +87,11 @@ public class DemoActivity extends Activity {
                 .addOnEventListener((OnEventErrorListener<ModelUserLogin, ModelUserDetail>) e -> print_e(MessageFormat.format("获取失败:{0}", e.getMessage())))
 
                 //请求好友列表与群列表
-                .merge(new E3_GetGroups()
+                .merge(
+                        new E3_GetGroups()
                                 .addOnEventListener(new OnEventLogListener<>("E3_GetGroups"))
-                        , new E4_GetFriends()
+                        ,
+                        new E4_GetFriends()
                                 .addOnEventListener(new OnEventLogListener<>("E4_GetFriends"))
                 )
                 .addOnEventListener(new OnEventLogListener<>("MergeEvent"))

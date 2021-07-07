@@ -87,7 +87,11 @@ public abstract class Event<P, R> {
      * @param events 事件集
      * @return 事件集的返回值对象数组, 该数组包含了事件集中所有事件的返回值。对象数组中返回值的顺序与事件集的顺序相同
      */
-    public <Result> MergeEvent<R, Result> merge(Event<? super R, ? extends Result>... events) {
+//    public <Result> MergeEvent<R, Result> merge(Event<? super R, ? extends Result>... events) {
+//        return (MergeEvent<R, Result>) chain(new MergeEvent(events));
+//    }
+
+    public <Result , T extends  Event<? super R, ? extends Result>> MergeEvent<R, Result> merge(T... events) {
         return (MergeEvent<R, Result>) chain(new MergeEvent(events));
     }
 
@@ -412,10 +416,9 @@ public abstract class Event<P, R> {
      *
      * @param listener
      */
-    public <T extends Event<P, R>> T addOnEventListener(OnEventListener<P, R> listener) {
+    public Event<P, R> addOnEventListener(OnEventListener<P, R> listener) {
         mOnEventListeners.register(listener);
-        //TODO:泛型递归问题 - https://blog.csdn.net/jdsjlzx/article/details/51590800
-        return (T) this;
+        return this;
     }
 
     /**
