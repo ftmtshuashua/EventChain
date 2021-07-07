@@ -27,7 +27,7 @@ public abstract class Event<P, R> {
     /**
      * 在同一条链上，当前事件的下一个事件的实例，如果该实例为空，则表示当前事件是链上的最后一个事件
      */
-    private Event<? super R, ?> mNext;
+    Event<? super R, ?> mNext;
 
     /**
      * 事件回调监听器集合
@@ -91,15 +91,15 @@ public abstract class Event<P, R> {
         return (MergeEvent<R, Result>) chain(new MergeEvent(events));
     }
 
-    /**
+    /* *//**
      * 根据事件集中事件的处理速度，使用最先完成的事件作为返回值
      *
      * @param events 事件集
      * @return 事件集中最先返回结果的对象
-     */
+     *//*
     public <Result> OneOfEvent<R, Result> oneOf(Event<? super R, ? extends Result>... events) {
         return (OneOfEvent<R, Result>) chain(new OneOfEvent(events));
-    }
+    }*/
 
     /**
      * 对事件返回的数据进行处理
@@ -191,15 +191,14 @@ public abstract class Event<P, R> {
         mIsStarted = false;
 
         onPrepare();
-        if (mNext != null) {
-            mNext.performChainPrepareStart();
-        }
     }
 
     /**
      * 当链被启动时候，链上所有事件都会收到该回调，使事件有机会更新自己的状态
+     * <p>避免在这里做耗时操作<p/>
      */
     protected void onPrepare() {
+//        EUtils.i("onPrepare", String.format("{%s}.onPrepare()", EUtils.id(this)));
 
     }
 
@@ -249,8 +248,8 @@ public abstract class Event<P, R> {
         onInterrupt();
 
         EventInterruptException throwable = new EventInterruptException();
-        getChain().onError(this, throwable);
         mOnEventListeners.map(listener -> listener.onError(throwable));
+        getChain().onError(this, throwable);
 
         performEventComplete();
         performChainComplete();
@@ -264,8 +263,8 @@ public abstract class Event<P, R> {
         if (getChain().isInterrupt()) {
             performEventInterrupt();
         } else {
-            getChain().onError(this, throwable);
             mOnEventListeners.map(listener -> listener.onError(throwable));
+            getChain().onError(this, throwable);
 
             performEventComplete();
             performChainComplete();
@@ -282,15 +281,13 @@ public abstract class Event<P, R> {
         if (getChain().isInterrupt()) {
             performEventInterrupt();
         } else {
-            getChain().onNext(this, result);
             mOnEventListeners.map(listener -> listener.onNext(result));
+            getChain().onNext(this, result);
 
             performEventComplete();
-            if (mNext != null) {
-                mNext.perStart(result);
-            } else {
-                performChainComplete();
-            }
+
+
+            getChain().next(this, result);
         }
     }
 
@@ -333,7 +330,7 @@ public abstract class Event<P, R> {
      * </p>
      */
     protected void onComplete() {
-
+//        EUtils.i("onComplete", String.format("{%s}.onComplete()", EUtils.id(this)));
     }
 
     /**
@@ -356,6 +353,7 @@ public abstract class Event<P, R> {
      * 由于一些其他原因，当前事件可能会被外部强制打断。当发生这种情况时候，我们能在这里进行监听和处理
      */
     protected void onInterrupt() {
+//        EUtils.i("onInterrupt", String.format("{%s}.onInterrupt()", EUtils.id(this)));
 
     }
 
@@ -416,6 +414,7 @@ public abstract class Event<P, R> {
      */
     public <T extends Event<P, R>> T addOnEventListener(OnEventListener<P, R> listener) {
         mOnEventListeners.register(listener);
+        //TODO:泛型递归问题 - https://blog.csdn.net/jdsjlzx/article/details/51590800
         return (T) this;
     }
 

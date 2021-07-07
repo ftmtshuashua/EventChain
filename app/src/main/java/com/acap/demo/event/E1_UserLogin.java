@@ -13,10 +13,10 @@ import com.acap.ec.Event;
  * Created by ACap on 2021/7/3 16:49
  * </pre>
  */
-public class E1_UserLogin extends Event<String, ModelUserLogin> {
+public class E1_UserLogin extends BaseEvent<String, ModelUserLogin> {
 
     @Override
-    protected void onCall(String params) {
+    protected void onChildCall(String params) {
         if (params == null || params.length() == 0) {
             error(new Exception("请输入用户名!"));
         } else {

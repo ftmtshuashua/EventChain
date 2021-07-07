@@ -58,12 +58,6 @@ public class MergeEvent<P, R> extends Event<P, R[]> {
     }
 
     @Override
-    protected void onPrepare() {
-        super.onPrepare();
-        mListMap.map(prEvent -> prEvent.performChainPrepareStart());
-    }
-
-    @Override
     protected void onInterrupt() {
         super.onInterrupt();
         mListMap.map(prEvent -> prEvent.interrupt());

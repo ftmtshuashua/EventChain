@@ -16,10 +16,10 @@ import java.text.MessageFormat;
  * Created by ACap on 2021/7/3 16:58
  * </pre>
  */
-public class E2_GetUserDetail extends Event<ModelUserLogin, ModelUserDetail> {
+public class E2_GetUserDetail extends BaseEvent<ModelUserLogin, ModelUserDetail> {
 
     @Override
-    protected void onCall(ModelUserLogin params) {
+    protected void onChildCall(ModelUserLogin params) {
         if (params == null) {
             error(new Exception("用户未登录"));
         } else {

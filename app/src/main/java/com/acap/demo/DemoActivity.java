@@ -16,12 +16,11 @@ import com.acap.demo.event.E1_UserLogin;
 import com.acap.demo.event.E2_GetUserDetail;
 import com.acap.demo.event.E3_GetGroups;
 import com.acap.demo.event.E4_GetFriends;
-import com.acap.demo.event.E5_RequestAd;
-import com.acap.demo.event.E_TimeOut;
 import com.acap.demo.mode.ModelUserDetail;
 import com.acap.demo.mode.ModelUserLogin;
 import com.acap.demo.utils.ThreadHelper;
 import com.acap.demo.utils.Utils;
+import com.acap.ec.Event;
 import com.acap.ec.listener.OnEventErrorListener;
 import com.acap.ec.listener.OnEventNextListener;
 import com.acap.ec.listener.OnEventStartListener;
@@ -50,7 +49,7 @@ public class DemoActivity extends Activity {
     private TextView mV_Info;
     private ScrollView mV_Scroll;
     private Button mV_Button;
-
+    private Event mDemoEvent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,13 +60,16 @@ public class DemoActivity extends Activity {
         mV_Button = findViewById(R.id.button);
 
         Glide.with(this).load(R.drawable.icon_loading).into(mV_Loading);
-    }
 
-
-    public void start(View v) {
-
-        //登录
         new E1_UserLogin()
+                .addOnEventListener(new OnEventLogListener<>(""))
+                .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> {
+
+                })
+        ;
+
+        mDemoEvent = new E1_UserLogin()
+                .addOnEventListener(new OnEventLogListener<>("E1_UserLogin"))
                 .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> print_clear())
                 .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> print_i(MessageFormat.format("----------用户<{0}>登录----------", params)))
                 .addOnEventListener((OnEventNextListener<String, ModelUserLogin>) result -> print_i(MessageFormat.format("用户<{0}>登录成功,用户ID：{1}", result.username, result.token)))
@@ -75,43 +77,62 @@ public class DemoActivity extends Activity {
 
                 //获得用户信息
                 .chain(new E2_GetUserDetail())
+                .addOnEventListener(new OnEventLogListener<>("E2_GetUserDetail"))
                 .addOnEventListener((OnEventStartListener<ModelUserLogin, ModelUserDetail>) params -> print_i("----------获取用户信息----------"))
                 .addOnEventListener((OnEventNextListener<ModelUserLogin, ModelUserDetail>) result -> print_i(MessageFormat.format("获取用户信息成功:{0}", result.detail)))
                 .addOnEventListener((OnEventErrorListener<ModelUserLogin, ModelUserDetail>) e -> print_e(MessageFormat.format("获取失败:{0}", e.getMessage())))
 
                 //请求好友列表与群列表
-                .merge(new E3_GetGroups(), new E4_GetFriends())
+                .merge(new E3_GetGroups()
+                                .addOnEventListener(new OnEventLogListener<>("E3_GetGroups"))
+                        , new E4_GetFriends()
+                                .addOnEventListener(new OnEventLogListener<>("E4_GetFriends"))
+                )
+                .addOnEventListener(new OnEventLogListener<>("MergeEvent"))
                 .addOnEventListener((OnEventStartListener<ModelUserDetail, Object[]>) params -> print_i("----------获得好友和群列表----------"))
                 .addOnEventListener((OnEventErrorListener<ModelUserDetail, Object[]>) e -> print_e(MessageFormat.format("获取聊天数据:{0}", e.getMessage())))
                 .addOnEventListener((OnEventNextListener<ModelUserDetail, Object[]>) result -> {
                     print_i(MessageFormat.format("群列表:{0}", new Gson().toJson(result[0])));
                     print_i(MessageFormat.format("好友列表:{0}", new Gson().toJson(result[1])));
                 })
-
                 //请求广告并设置超时时间1秒
-                .oneOf(new E5_RequestAd(), new E_TimeOut<>(1000))
-                .addOnEventListener(new OnEventLogListener<>("oneOf"))
-                .addOnEventListener((OnEventStartListener<Object[], String>) params -> print_i("----------获得广告----------"))
-                .addOnEventListener((OnEventNextListener<Object[], String>) result -> {
-                    if (result == null) {
-                        print_e("广告请求超时");
-                    } else {
-                        print_i(MessageFormat.format("广告 - {0}", result));
-                    }
-                })
-
+//                .oneOf(new E5_RequestAd(), new E_TimeOut<>(1000))
+//                .addOnEventListener(new OnEventLogListener<>("oneOf"))
+//                .addOnEventListener((OnEventStartListener<Object[], String>) params -> print_i("----------获得广告----------"))
+//                .addOnEventListener((OnEventNextListener<Object[], String>) result -> {
+//                    if (result == null) {
+//                        print_e("广告请求超时");
+//                    } else {
+//                        print_i(MessageFormat.format("广告 - {0}", result));
+//                    }
+//                })
                 .addOnChainListener(new OnEventRunningListener(mV_Loading, mV_Button))
-                .addOnChainListener(new OnChainLogListener("Demo"))
-                .start(getUserName());
+                .addOnChainListener(new OnChainLogListener("Demo"));
+    }
+
+
+    //复用事件
+
+
+    public void start(View v) {
+        //登录
+        mDemoEvent.start(getUserName());
     }
 
 
     private String getUserName() {
-        switch ((int) Utils.random(3)) {
-            case 0:
-                return "Vip888";
-            case 1:
-                return "Gm666";
+
+        if (Utils.getSmallProbabilityEvent(2)) {
+            return "Vip888";
+        }
+        if (Utils.getSmallProbabilityEvent(2)) {
+            return "Gm666";
+        }
+        if (Utils.getSmallProbabilityEvent(2)) {
+            return "PM333";
+        }
+        if (Utils.getSmallProbabilityEvent(2)) {
+            return "小明";
         }
         return "";
     }

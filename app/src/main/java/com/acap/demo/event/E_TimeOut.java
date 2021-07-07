@@ -11,7 +11,7 @@ import com.acap.ec.Event;
  * Created by ACap on 2021/7/3 16:49
  * </pre>
  */
-public class E_TimeOut<R> extends Event<Object, R> {
+public class E_TimeOut<R> extends BaseEvent<Object, R> {
     private long time;
 
     public E_TimeOut(long time) {
@@ -19,10 +19,15 @@ public class E_TimeOut<R> extends Event<Object, R> {
     }
 
     @Override
-    protected void onCall(Object params) {
+    protected void onChildCall(Object params) {
         ThreadHelper.io(() -> {
-            ThreadHelper.sleep(time);
+//            ThreadHelper.sleep(time);
+
+            ThreadHelper.sleep(100);
             next(null);
+
+            ThreadHelper.sleep(2000);
+//            ThreadHelper.main(() ->next(null));
         });
     }
 }

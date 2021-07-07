@@ -81,6 +81,18 @@ public class Chain implements OnChainListener {
         mFirst.perStart(params);
     }
 
+
+    //执行下一个事件
+    void next(Event event, Object result) {
+        if (event.mNext != null) {
+            event.mNext.performChainPrepareStart();
+            event.mNext.perStart(result);
+        } else {
+            event.performChainComplete();
+        }
+    }
+
+
     /**
      * 判断链是否被终止
      */

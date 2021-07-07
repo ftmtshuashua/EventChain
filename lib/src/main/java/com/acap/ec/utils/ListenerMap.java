@@ -22,7 +22,9 @@ public class ListenerMap<T> {
      * @param t 监听器对象
      */
     public void register(T t) {
-        mArray.add(t);
+        if (!mArray.contains(t)) {
+            mArray.add(t);
+        }
     }
 
     /**

@@ -11,10 +11,10 @@ import com.acap.ec.Event;
  * Created by ACap on 2021/7/3 16:58
  * </pre>
  */
-public class E5_RequestAd extends Event<Object, String> {
+public class E5_RequestAd extends BaseEvent<Object, String> {
 
     @Override
-    protected void onCall(Object params) {
+    protected void onChildCall(Object params) {
         request(params);
     }
 

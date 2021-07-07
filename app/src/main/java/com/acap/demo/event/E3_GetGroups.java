@@ -15,10 +15,10 @@ import com.acap.ec.Event;
  * Created by ACap on 2021/7/3 16:58
  * </pre>
  */
-public class E3_GetGroups extends Event<ModelUserDetail, ModelGroups> {
+public class E3_GetGroups extends BaseEvent<ModelUserDetail, ModelGroups> {
 
     @Override
-    protected void onCall(ModelUserDetail params) {
+    protected void onChildCall(ModelUserDetail params) {
         if (params == null) {
             error(new Exception("用户未登录"));
         } else {

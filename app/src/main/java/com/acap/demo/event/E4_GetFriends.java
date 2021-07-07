@@ -17,10 +17,10 @@ import java.text.MessageFormat;
  * Created by ACap on 2021/7/3 16:58
  * </pre>
  */
-public class E4_GetFriends extends Event<ModelUserDetail, ModelFriends> {
+public class E4_GetFriends extends BaseEvent<ModelUserDetail, ModelFriends> {
 
     @Override
-    protected void onCall(ModelUserDetail params) {
+    protected void onChildCall(ModelUserDetail params) {
         if (params == null) {
             error(new Exception("用户未登录"));
         } else {
