@@ -37,17 +37,17 @@ public class OnEventRunningListener implements OnChainListener {
     }
 
     @Override
-    public void onStart(Event event) {
+    public void onEventStart(Event event) {
 
     }
 
     @Override
-    public void onError(Event event, Throwable throwable) {
+    public void onEventError(Event event, Throwable throwable) {
 
     }
 
     @Override
-    public void onNext(Event event, Object result) {
+    public void onEventNext(Event event, Object result) {
 
     }
 

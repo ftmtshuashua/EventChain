@@ -1,4 +1,4 @@
-package com.acap.ec.internal;
+package com.acap.ec;
 
 import com.acap.ec.listener.OnChainListener;
 import com.acap.ec.listener.OnEventListener;
@@ -16,8 +16,7 @@ import com.acap.ec.listener.OnEventListener;
  * Created by ACap on 2021/7/8 16:29
  * </pre>
  */
-public interface ILinkableEvent<P, R, T extends ILinkableEvent<P, R, T>> {
-//public interface ILinkableEvent<P, R> {
+interface ILinkableEvent<P, R, T extends ILinkableEvent<P, R, T>> {
 
 
     /**
@@ -66,17 +65,26 @@ public interface ILinkableEvent<P, R, T extends ILinkableEvent<P, R, T>> {
      * @param params 事件入参
      */
     void onCall(P params);
-    void onPrepare();
-    void onComplete();
-    void onInterrupt();
 
-    void finish();
+    boolean isStart();
+
+    void onPrepare();
+
+
     void interrupt();
 
+    void onInterrupt();
 
+
+    boolean isInterrupt();
+
+    void onComplete();
 
     boolean isComplete();
-    boolean isStart();
+
+
+    void finish();
+
     boolean isFinish();
 
     /**
@@ -91,7 +99,7 @@ public interface ILinkableEvent<P, R, T extends ILinkableEvent<P, R, T>> {
      *
      * @param listener
      */
-    T removeOnEventListener(OnEventListener<P, R> listener);
+    T removeOnEventListener(OnEventListener listener);
 
     /**
      * 添加链监听器
@@ -105,6 +113,6 @@ public interface ILinkableEvent<P, R, T extends ILinkableEvent<P, R, T>> {
      *
      * @param listener
      */
-    T removeOnChainListener(OnChainListener<P, R> listener);
+    T removeOnChainListener(OnChainListener listener);
 
 }

@@ -1,6 +1,8 @@
 package com.acap.ec;
 
+import com.acap.ec.internal.EventState;
 import com.acap.ec.listener.OnChainListener;
+import com.acap.ec.listener.OnEventListener;
 import com.acap.ec.utils.ListenerMap;
 
 /**
@@ -11,265 +13,219 @@ import com.acap.ec.utils.ListenerMap;
  * Created by ACap on 2021/3/29 18:44
  * </pre>
  */
-public class Chain<P, R> implements OnChainListener {
+public final class Chain<P, R> implements ILinkableEvent<P, R, Chain<P, R>> {
 
     /**
-     * 链头，一条链上只有一个链头，在链中任何事件调用开始方法都将从链头开始
+     * 链上第一个事件
      */
-    private Event mFirst;
+    private Event<P, ?> mFirst;
+
+    private EventState mEventState = EventState.READY;
+
+    private final ListenerMap<OnChainListener<P, R>> mOnChainListeners = new ListenerMap<>();
+    private final ListenerMap<OnEventListener<P, R>> mOnEventListeners = new ListenerMap<>();
+
+
+    Chain(Event event) {
+        mFirst = event;
+//        mOnChainListeners.register(mChainStateListener);
+    }
 
     /**
-     * 链被终止的标志位.如果它为{@code true},那么链中所有的事件之间的消息传递将被阻止
+     * 获得链上最后一个事件
      */
-    private boolean mIsFinish = false; //链被终止，标志位
+    private Event getLast() {
+        Event mLast = mFirst;
+        while (mLast != null) {
+            if (mLast.mNext != null) {
+                mLast = mLast.mNext;
+            } else {
+                break;
+            }
+        }
+        return mLast;
+    }
+
+    @Override
+    public <R1, TR extends ILinkableEvent<P, R1, TR>, TP extends ILinkableEvent<? super R, R1, TP>> TR chain(TP event) {
+        getLast().chain(event);
+        return (TR) this;
+    }
+
+    @Override
+    public <R1, TR extends ILinkableEvent<P, R1, TR>, TP extends ILinkableEvent<? super R, ? extends R1, TP>> TR merge(TP... events) {
+        getLast().chain(new MergeEvent(events));
+        return (TR) this;
+    }
+
+    @Override
+    public void start() {
+        start(null);
+    }
+
+    @Override
+    public void start(P params) {
+        performStart(params);
+
+    }
 
     /**
-     * 当前链是否被打断的状态
-     */
-    private boolean mIsInterrupt = false;
-
-    /**
-     * 链的状态监听
-     */
-    private final ChainStateListener mChainStateListener = new ChainStateListener();
-
-
-    /**
-     * 链的监听器集合
-     */
-    private final ListenerMap<OnChainListener> mOnChainListeners = new ListenerMap<>();
-
-    /**
-     * 创建链对象，并传入头事件
+     * 从链头开始执行链的逻辑
      *
-     * @param first 链上第一个事件实例
+     * @param params 链的入参，该参数将被传递到链上的第一个事件中
      */
-    public Chain(Event first) {
-        this.mFirst = first;
-        mOnChainListeners.register(mChainStateListener);
-    }
+    private void performStart(P params) {
+        if (mEventState != EventState.READY || isFinish()) return;
+        performPrepare();
 
+        if (isFinish()) return;
 
-    /**
-     * 获得链上第一个事件的实例
-     */
-    public Event getFirst() {
-        return mFirst;
-    }
+        mOnChainListeners.map(it -> it.onChainStart(params));
+        mOnEventListeners.map(it -> it.onStart(params));
 
-    /**
-     * 从链头开始启动
-     *
-     * @param params 链头启动所需要的前置条件
-     */
-    public void start(Object params) {
-        if (isFinish() || isRunning()) return;
-
-        mIsInterrupt = false;
-        mFirst.performChainPrepareStart();
-
-        performFirstEventStart(params);
-    }
-
-    /**
-     * 从链头开始执行事件
-     *
-     * @param params 执行链头传入的参数
-     */
-    void performFirstEventStart(Object params) {
-        mOnChainListeners.map(onChainListener -> onChainListener.onChainStart());
-        mFirst.perStart(params);
-    }
-
-
-    //执行下一个事件
-    void next(Event event, Object result) {
-        if (event.mNext != null) {
-            event.mNext.performChainPrepareStart();
-            event.mNext.perStart(result);
+        if (isFinish()) {
+            performComplete();
         } else {
-            event.performChainComplete();
+            onCall(params);
         }
     }
 
-
     /**
-     * 判断链是否被终止
+     * 执行事件完成回调
      */
-    public boolean isFinish() {
-        return mIsFinish;
+    void performComplete() {
+        mOnEventListeners.map(it -> it.onComplete());
+        mOnChainListeners.map(it -> it.onChainComplete());
     }
 
     /**
-     * 终止链上所有的后续行为
+     * 事件就绪
      */
-    public void finish() {
-        mIsFinish = true;
+    void performPrepare() {
+        mEventState = EventState.READY;
+        onPrepare();
     }
 
-    public boolean isRunning() {
-        return mChainStateListener.mIsRunning;
+
+    @Override
+    public void next() {
+        next(null);
+    }
+
+    @Override
+    public void next(R result) {
+        mOnEventListeners.map(prOnEventListener -> prOnEventListener.onNext(result));
+    }
+
+    @Override
+    public void error(Throwable throwable) {
+        mOnEventListeners.map(prOnEventListener -> prOnEventListener.onError(throwable));
+    }
+
+    @Override
+    public void onCall(P params) {
+        mFirst.performStart(params);
+    }
+
+    void performOnEventStart(Event event, Object params) {
+        mOnChainListeners.map(it -> it.onEventStart(event, params));
     }
 
     /**
-     * 打断正在链上正在执行的事件
-     */
-    public void interrupt() {
-        mIsInterrupt = true;
-    }
-
-    /**
-     * 判断当前链是否被打断,被打断的链上的事件将无法进行事件传递。它将完成当前链并抛出一个{@link com.acap.ec.excption.EventInterruptException}异常
+     * 当事件执行完成
      *
-     * @return 是否已打断
+     * @param event
      */
+    void performOnEventNext(Event event, Object result) {
+        mOnChainListeners.map(it -> it.onEventNext(event, result));
+    }
+
+    void performOnEventError(Event event, Throwable throwable) {
+        mOnChainListeners.map(it -> it.onEventError(event, throwable));
+    }
+
+    /**
+     * 开始下一个事件
+     *
+     * @param event
+     * @param result
+     */
+    void startEventNext(Event event, Object result) {
+        if (event.mNext != null) {
+            event.mNext.performStart(result);
+        } else {
+            performComplete();
+        }
+    }
+
+    void startEventError(Event event, Throwable throwable) {
+        mOnChainListeners.map(it->it.onChainError(throwable));
+        performComplete();
+    }
+
+
+    @Override
+    public void onPrepare() {
+
+    }
+
+    @Override
+    public void onComplete() {
+
+    }
+
+    @Override
+    public void onInterrupt() {
+
+    }
+
+    @Override
     public boolean isInterrupt() {
-        return mIsInterrupt;
-    }
-
-
-    /**
-     * 判断链是否出错了
-     */
-    public boolean isError() {
-        return mChainStateListener.mError != null;
-    }
-
-    /**
-     * 获得链上发生的错误，如果当前链没有发生错误，它将为Null
-     *
-     * @return 链上发生的错误
-     */
-    public Throwable getError() {
-        return mChainStateListener.mError;
-    }
-
-
-    /**
-     * 获得链上发生错误事件实例，如果当前链没有发生错误，它将为Null
-     *
-     * @return 链上发生的错误
-     */
-    public Event getErrorEvent() {
-        return mChainStateListener.mErrorEvent;
-    }
-
-
-    /**
-     * 注册监听器
-     *
-     * @param t 监听器对象
-     */
-    public void register(OnChainListener t) {
-        mOnChainListeners.register(t);
-    }
-
-    /**
-     * 移除监听器
-     *
-     * @param t 监听器对象
-     * @return 是否移除成功
-     */
-    public boolean unregister(OnChainListener t) {
-        return mOnChainListeners.unregister(t);
+        return false;
     }
 
     @Override
-    public void onChainStart() {
-        mOnChainListeners.map(onChainListener -> onChainListener.onChainStart());
-    }
-
-    /**
-     * 当事件链中某个事件开始执行
-     *
-     * @param event 执行的事件
-     */
-    public void onStart(Event event) {
-        mOnChainListeners.map(onChainListener -> onChainListener.onStart(event));
-    }
-
-    /**
-     * 当事件链中某个事件执行错误
-     *
-     * @param event     执行的事件
-     * @param throwable 事件抛出的异常信息
-     */
-    public void onError(Event event, Throwable throwable) {
-        mOnChainListeners.map(onChainListener -> onChainListener.onError(event, throwable));
-    }
-
-    @Override
-    public void onNext(Event event, Object result) {
-        mOnChainListeners.map(onChainListener -> onChainListener.onNext(event, result));
+    public void finish() {
 
     }
 
     @Override
-    public void onChainComplete() {
-        mOnChainListeners.map(onChainListener -> onChainListener.onChainComplete());
+    public void interrupt() {
+
     }
 
-    /**
-     * 链的状态监听
-     */
-    private static final class ChainStateListener implements OnChainListener {
-
-        /**
-         * 链上发生错误的事件实例
-         */
-        private Event mErrorEvent;
-        /**
-         * 链上发生的错误信息
-         */
-        private Throwable mError;
-
-
-        /**
-         * 链是否正在运行
-         */
-        private boolean mIsRunning = false;
-
-
-        @Override
-        public void onChainStart() {
-            mIsRunning = true;
-        }
-
-        @Override
-        public void onStart(Event event) {
-
-        }
-
-        @Override
-        public void onError(Event event, Throwable throwable) {
-            mErrorEvent = event;
-            mError = throwable;
-        }
-
-        @Override
-        public void onNext(Event event, Object result) {
-
-        }
-
-        @Override
-        public void onChainComplete() {
-            mIsRunning = false;
-        }
-
-
-        /**
-         * 获得 链上发生错误的事件实例
-         */
-        public Event getErrorEvent() {
-            return mErrorEvent;
-        }
-
-        /**
-         * 获得 链上发生的错误信息
-         */
-        public Throwable getError() {
-            return mError;
-        }
+    @Override
+    public boolean isComplete() {
+        return false;
     }
 
+    @Override
+    public boolean isStart() {
+        return false;
+    }
+
+    @Override
+    public boolean isFinish() {
+        return false;
+    }
+
+    @Override
+    public Chain<P, R> addOnEventListener(OnEventListener<P, R> listener) {
+        return null;
+    }
+
+    @Override
+    public Chain<P, R> removeOnEventListener(OnEventListener listener) {
+        return null;
+    }
+
+    @Override
+    public Chain<P, R> addOnChainListener(OnChainListener<P, R> listener) {
+        return null;
+    }
+
+    @Override
+    public Chain<P, R> removeOnChainListener(OnChainListener listener) {
+        return null;
+    }
 }

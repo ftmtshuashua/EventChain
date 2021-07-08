@@ -1,6 +1,7 @@
 package com.acap.ec;
 
 import com.acap.ec.excption.MergeException;
+import com.acap.ec.internal.ILinkableEvent;
 import com.acap.ec.listener.OnChainListener;
 import com.acap.ec.utils.ListMap;
 
@@ -27,7 +28,7 @@ public class MergeEvent<P, R> extends Event<P, R[]> {
     /*事件计数器，用与识别所有并发事件全部执行完成*/
     private final AtomicInteger mForkResultCount = new AtomicInteger(0);
 
-    public MergeEvent(Event<P, ? extends R>... chains) {
+    public <T extends ILinkableEvent<P, ? extends R,T>> MergeEvent(T... chains) {
         if (chains != null) {
             for (int i = 0; i < chains.length; i++) {
                 Event event = chains[i];
@@ -69,12 +70,12 @@ public class MergeEvent<P, R> extends Event<P, R[]> {
         }
 
         @Override
-        public void onStart(Event node) {
+        public void onEventStart(Event node) {
             getChain().onStart(node);
         }
 
         @Override
-        public void onError(Event node, Throwable throwable) {
+        public void onEventError(Event node, Throwable throwable) {
             getChain().onError(node, throwable);
         }
 

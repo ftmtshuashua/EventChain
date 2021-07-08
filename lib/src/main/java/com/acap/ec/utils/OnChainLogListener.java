@@ -26,12 +26,12 @@ public class OnChainLogListener<R> implements OnChainListener<R> {
     }
 
     @Override
-    public void onStart(Event node) {
+    public void onEventStart(Event node) {
         EUtils.i(mTag, "onStart(" + EUtils.id(node) + ")");
     }
 
     @Override
-    public void onError(Event node, Throwable throwable) {
+    public void onEventError(Event node, Throwable throwable) {
         EUtils.e(mTag, "onError(" + EUtils.id(node) + "," + throwable + ")");
     }
 
