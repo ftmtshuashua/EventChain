@@ -2,6 +2,7 @@ package com.acap.ec;
 
 import com.acap.ec.action.Apply;
 import com.acap.ec.excption.EventInterruptException;
+import com.acap.ec.internal.ILinkableEvent;
 import com.acap.ec.listener.OnChainListener;
 import com.acap.ec.listener.OnEventListener;
 import com.acap.ec.utils.ListenerMap;
@@ -17,7 +18,7 @@ import com.acap.ec.utils.ListenerMap;
  * Created by ACap on 2021/3/29 18:12
  * </pre>
  */
-public abstract class Event<P, R> {
+public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>> {
 
     /**
      * 这是事件所在的链，该实例储存的链的信息和状态
@@ -63,6 +64,12 @@ public abstract class Event<P, R> {
         return event;
     }
 
+
+    @Override
+    public <R1, T1 extends ILinkableEvent<P, R1, T1>, T2 extends ILinkableEvent<? super R, R1, T2>> T1 chain(T2 event) {
+        return null;
+    }
+
     /**
      * 在当前事件执行之后执行另外一个事件
      * <p>
@@ -72,7 +79,7 @@ public abstract class Event<P, R> {
      * @param event 被放在当前事件之后的事件实例
      * @return 返回 被放入的事件实例本身
      */
-    public <Result, T extends Event<? super R, Result>> T chain(T event) {
+    public <Result, T extends Event<? super R, Result>> Chain chain(T event) {
         event.setChain(getChain());
         mNext = event;
         return event;
@@ -90,8 +97,7 @@ public abstract class Event<P, R> {
 //    public <Result> MergeEvent<R, Result> merge(Event<? super R, ? extends Result>... events) {
 //        return (MergeEvent<R, Result>) chain(new MergeEvent(events));
 //    }
-
-    public <Result , T extends  Event<? super R, ? extends Result>> MergeEvent<R, Result> merge(T... events) {
+    public <Result, T extends Event<? super R, ? extends Result>> MergeEvent<R, Result> merge(T... events) {
         return (MergeEvent<R, Result>) chain(new MergeEvent(events));
     }
 
@@ -127,7 +133,9 @@ public abstract class Event<P, R> {
      * @return
      */
     public <Result> ApplyEvent<R, Result> apply(Apply<R, Result> apply) {
-        return chain(new ApplyEvent<>(apply));
+        ApplyEvent<R, Result> event = new ApplyEvent<>(apply);
+        chain(event);
+        return event;
     }
 
 

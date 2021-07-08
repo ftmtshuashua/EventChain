@@ -11,7 +11,7 @@ import com.acap.ec.utils.ListenerMap;
  * Created by ACap on 2021/3/29 18:44
  * </pre>
  */
-public class Chain implements OnChainListener {
+public class Chain<P, R> implements OnChainListener {
 
     /**
      * 链头，一条链上只有一个链头，在链中任何事件调用开始方法都将从链头开始

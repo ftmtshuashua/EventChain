@@ -68,7 +68,7 @@ public class DemoActivity extends Activity {
         //TODO:参数异常
         E2_GetUserDetail chain =
                 new E1_UserLogin()
-                .chain(new E2_GetUserDetail());
+                        .chain(new E2_GetUserDetail());
 
 
         //TODO:Java泛型数组安全性问题 - https://blog.csdn.net/zxm317122667/article/details/78400398
