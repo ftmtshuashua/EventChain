@@ -1,5 +1,6 @@
 package com.acap.ec;
 
+import com.acap.ec.action.Apply;
 import com.acap.ec.excption.EventInterruptException;
 import com.acap.ec.internal.EventState;
 import com.acap.ec.listener.OnChainListener;
@@ -17,7 +18,7 @@ import com.acap.ec.utils.ListenerMap;
  * Created by ACap on 2021/3/29 18:12
  * </pre>
  */
-public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>> {
+public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>>, IEvent<R> {
 
     /**
      * 事件所在的‘链’，
@@ -37,16 +38,28 @@ public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>> {
         return mChain;
     }
 
-    @Override
-    public <R1, TR extends ILinkableEvent<P, R1, TR>, TP extends ILinkableEvent<? super R, R1, TP>> TR chain(TP event) {
-        mNext = (Event<R, ?>) event;
-        return (TR) getChain();
+    void setChain(Chain chain) {
+        mChain = chain;
+        if (mNext != null) mNext.setChain(chain);
     }
 
     @Override
-    public <R1, TR extends ILinkableEvent<P, R1, TR>, TP extends ILinkableEvent<? super R, ? extends R1, TP>> TR merge(TP... events) {
+    public <R1> Chain<P, R1> chain(ILinkableEvent<? super R, R1, ?> event) {
+        mNext = (Event<R, ?>) event;
+        mNext.setChain(getChain());
+        return getChain();
+    }
+
+    @Override
+    public <R1, T extends ILinkableEvent<? super R, ? extends R1, ?>> Chain<P, R1[]> merge(T... events) {
         return chain(new MergeEvent(events));
     }
+
+    @Override
+    public <R1> Chain<P, R1> apply(Apply<R, R1> apply) {
+        return chain(new ApplyEvent<>(apply));
+    }
+
 
     @Override
     public void start() {
@@ -93,7 +106,7 @@ public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>> {
     /**
      * 检查活动状态
      */
-    private boolean checkAlive() {
+    private final boolean checkAlive() {
         if (isComplete() || !isStart()) {
             return false;
         }
@@ -112,11 +125,12 @@ public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>> {
     @Override
     public void next(R result) {
         if (checkAlive()) {
-            mEventState = EventState.COMPLETE;
             mOnEventListeners.map(listener -> listener.onNext(result));
             getChain().performOnEventNext(this, result);
+
+            mEventState = EventState.COMPLETE;
             performEventComplete();
-            getChain().startEventNext(this, result);
+            getChain().performEventNextComplete(this, result);
         }
     }
 
@@ -127,19 +141,27 @@ public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>> {
         }
     }
 
+    /**
+     * 执行打断的逻辑
+     */
     private final void performEventInterrupt() {
         onInterrupt();
         performEventError(new EventInterruptException());
     }
 
+    /**
+     * 执行事件错误的逻辑
+     *
+     * @param throwable 事件中发生的错误
+     */
     private final void performEventError(Throwable throwable) {
-        mEventState = EventState.COMPLETE;
 
         mOnEventListeners.map(listener -> listener.onError(throwable));
         getChain().performOnEventError(this, throwable);
 
+        mEventState = EventState.COMPLETE;
         performEventComplete();
-        getChain().startEventError(this, throwable);
+        getChain().performEventErrorComplete(this, throwable);
     }
 
 

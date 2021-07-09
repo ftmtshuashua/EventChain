@@ -16,11 +16,14 @@ import com.acap.demo.event.E1_UserLogin;
 import com.acap.demo.event.E2_GetUserDetail;
 import com.acap.demo.event.E3_GetGroups;
 import com.acap.demo.event.E4_GetFriends;
+import com.acap.demo.event.E5_RequestAd;
+import com.acap.demo.event.E_TimeOut;
 import com.acap.demo.mode.ModelUserDetail;
 import com.acap.demo.mode.ModelUserLogin;
 import com.acap.demo.utils.ThreadHelper;
 import com.acap.demo.utils.Utils;
 import com.acap.ec.Event;
+import com.acap.ec.ILinkableEvent;
 import com.acap.ec.listener.OnEventErrorListener;
 import com.acap.ec.listener.OnEventNextListener;
 import com.acap.ec.listener.OnEventStartListener;
@@ -30,8 +33,6 @@ import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <pre>
@@ -51,7 +52,7 @@ public class DemoActivity extends Activity {
     private TextView mV_Info;
     private ScrollView mV_Scroll;
     private Button mV_Button;
-    private Event mDemoEvent;
+    private ILinkableEvent<String, ?, ?> mDemoEvent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,41 +67,42 @@ public class DemoActivity extends Activity {
 
 
         //TODO:参数异常
-//        E2_GetUserDetail chain =
-//                new E1_UserLogin()
-//                        .chain(new E2_GetUserDetail());
+        E1_UserLogin e1_userLogin = new E1_UserLogin();
+
+//        TR chain = new E1_UserLogin().chain(new E2_GetUserDetail());
 
 
         //TODO:Java泛型数组安全性问题 - https://blog.csdn.net/zxm317122667/article/details/78400398
         mDemoEvent = new E1_UserLogin()
-//                .addOnEventListener(new OnEventLogListener<>("E1_UserLogin"))
-//                .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> print_clear())
-//                .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> print_i(MessageFormat.format("----------用户<{0}>登录----------", params)))
-//                .addOnEventListener((OnEventNextListener<String, ModelUserLogin>) result -> print_i(MessageFormat.format("用户<{0}>登录成功,用户ID：{1}", result.username, result.token)))
-//                .addOnEventListener((OnEventErrorListener<String, ModelUserLogin>) e -> print_e(MessageFormat.format("登录失败:{0}", e.getMessage())))
-//
-//                //获得用户信息
-//                .chain(new E2_GetUserDetail())
-//                .addOnEventListener(new OnEventLogListener<>("E2_GetUserDetail"))
-//                .addOnEventListener((OnEventStartListener<ModelUserLogin, ModelUserDetail>) params -> print_i("----------获取用户信息----------"))
-//                .addOnEventListener((OnEventNextListener<ModelUserLogin, ModelUserDetail>) result -> print_i(MessageFormat.format("获取用户信息成功:{0}", result.detail)))
-//                .addOnEventListener((OnEventErrorListener<ModelUserLogin, ModelUserDetail>) e -> print_e(MessageFormat.format("获取失败:{0}", e.getMessage())))
-//
-//                //请求好友列表与群列表
-//                .merge(
-//                        new E3_GetGroups()
-//                                .addOnEventListener(new OnEventLogListener<>("E3_GetGroups"))
-//                        ,
-//                        new E4_GetFriends()
-//                                .addOnEventListener(new OnEventLogListener<>("E4_GetFriends"))
-//                )
-//                .addOnEventListener(new OnEventLogListener<>("MergeEvent"))
-//                .addOnEventListener((OnEventStartListener<ModelUserDetail, Object[]>) params -> print_i("----------获得好友和群列表----------"))
-//                .addOnEventListener((OnEventErrorListener<ModelUserDetail, Object[]>) e -> print_e(MessageFormat.format("获取聊天数据:{0}", e.getMessage())))
-//                .addOnEventListener((OnEventNextListener<ModelUserDetail, Object[]>) result -> {
-//                    print_i(MessageFormat.format("群列表:{0}", new Gson().toJson(result[0])));
-//                    print_i(MessageFormat.format("好友列表:{0}", new Gson().toJson(result[1])));
-//                })
+                .addOnEventListener(new OnEventLogListener<>("E1_UserLogin"))
+                .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> print_clear())
+                .addOnEventListener((OnEventStartListener<String, ModelUserLogin>) params -> print_i(MessageFormat.format("----------用户<{0}>登录----------", params)))
+                .addOnEventListener((OnEventNextListener<String, ModelUserLogin>) result -> print_i(MessageFormat.format("用户<{0}>登录成功,用户ID：{1}", result.username, result.token)))
+                .addOnEventListener((OnEventErrorListener<String, ModelUserLogin>) e -> print_e(MessageFormat.format("登录失败:{0}", e.getMessage())))
+
+                //获得用户信息
+                .chain(
+                        new E2_GetUserDetail()
+                                .addOnEventListener(new OnEventLogListener<>("E2_GetUserDetail"))
+                                .addOnEventListener((OnEventStartListener<ModelUserLogin, ModelUserDetail>) params -> print_i("----------获取用户信息----------"))
+                                .addOnEventListener((OnEventNextListener<ModelUserLogin, ModelUserDetail>) result -> print_i(MessageFormat.format("获取用户信息成功:{0}", result.detail)))
+                                .addOnEventListener((OnEventErrorListener<ModelUserLogin, ModelUserDetail>) e -> print_e(MessageFormat.format("获取失败:{0}", e.getMessage())))
+                )
+                //请求好友列表与群列表
+                .merge(
+                        new E3_GetGroups()
+                                .addOnEventListener(new OnEventLogListener<>("E3_GetGroups"))
+                        ,
+                        new E4_GetFriends()
+                                .addOnEventListener(new OnEventLogListener<>("E4_GetFriends"))
+                ).addOnEventListener(new OnEventLogListener<>("MergeEvent"))
+                .addOnEventListener((OnEventStartListener<String, Object[]>) params -> print_i("----------获得好友和群列表----------"))
+                .addOnEventListener((OnEventErrorListener<String, Object[]>) e -> print_e(MessageFormat.format("获取聊天数据:{0}", e.getMessage())))
+                .addOnEventListener((OnEventNextListener<String, Object[]>) result -> {
+                    print_i(MessageFormat.format("群列表:{0}", new Gson().toJson(result[0])));
+                    print_i(MessageFormat.format("好友列表:{0}", new Gson().toJson(result[1])));
+                })
+
 //                //请求广告并设置超时时间1秒
 //                .oneOf(new E5_RequestAd(), new E_TimeOut<>(1000))
 //                .addOnEventListener(new OnEventLogListener<>("oneOf"))
@@ -114,7 +116,7 @@ public class DemoActivity extends Activity {
 //                })
 //                .addOnChainListener(new OnEventRunningListener(mV_Loading, mV_Button))
 //                .addOnChainListener(new OnChainLogListener("Demo"))
-                ;
+        ;
     }
 
 

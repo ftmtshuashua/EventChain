@@ -1,5 +1,6 @@
 package com.acap.ec;
 
+import com.acap.ec.action.Apply;
 import com.acap.ec.listener.OnChainListener;
 import com.acap.ec.listener.OnEventListener;
 
@@ -16,7 +17,7 @@ import com.acap.ec.listener.OnEventListener;
  * Created by ACap on 2021/7/8 16:29
  * </pre>
  */
-interface ILinkableEvent<P, R, T extends ILinkableEvent<P, R, T>> {
+public interface ILinkableEvent<P, R, T extends ILinkableEvent<P, R, T>> {
 
 
     /**
@@ -28,37 +29,17 @@ interface ILinkableEvent<P, R, T extends ILinkableEvent<P, R, T>> {
      * @param <TP>  被连接事件的类型
      * @return 包含事件连接关系的‘链’对象
      */
-    <R1, TR extends ILinkableEvent<P, R1, TR>, TP extends ILinkableEvent<? super R, R1, TP>> TR chain(TP event);
+    <R1> Chain<P, R1> chain(ILinkableEvent<? super R, R1, ?> event);
 
 
-    <R1, TR extends ILinkableEvent<P, R1, TR>, TP extends ILinkableEvent<? super R, ? extends R1, TP>> TR merge(TP... events);
+    <R1, T extends ILinkableEvent<? super R, ? extends R1, ?>> Chain<P, R1[]> merge(T... events);
+
+    <R1> Chain<P, R1> apply(Apply<R, R1> apply);
+
 
     void start();
 
     void start(P params);
-
-    /**
-     * 当事件逻辑执行完成时候,请调用该函数来通知链上下一个事件
-     */
-    void next();
-
-    /**
-     * 当事件逻辑执行完成时候,请调用该函数来通知链上下一个事件
-     *
-     * @param result 当前事件的出参 - 表示事件执行结束后的结果
-     */
-    void next(R result);
-
-    /**
-     * <pre>
-     * 如果当前事件的逻辑执行时遇到一些问题，并且不希望后续的事件继续执行时。
-     * 请调用该函数,用于通知'链'
-     * </pre>
-     *
-     * @param throwable 当前事件的异常信息
-     */
-    void error(Throwable throwable);
-
     /**
      * 事件的逻辑函数.事件的逻辑从该函数开始执行,以该调用完成函数之后结束
      *

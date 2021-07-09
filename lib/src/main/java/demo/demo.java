@@ -1,5 +1,7 @@
 package demo;
 
+import com.acap.ec.listener.OnEventNextListener;
+
 /**
  * <pre>
  * Tip:
@@ -13,12 +15,30 @@ public class Demo {
     public static void main(String[] args) {
 
 
-        Evt<String, Integer> A_1 = new Evt();
+        Evt<String, Integer> A1 = new Evt();
+        Evt<Integer, String> A2 = new Evt();
+        Evt<Integer, Object> A3 = new Evt();
+        Evt<Object, Integer> A4 = new Evt();
 
-        Evt<Integer, String> A_2 = new Evt();
 
+        A1.chain(A2.chain(A1).chain(A2).chain(A1))
+                .addOnEventListener(new OnEventNextListener<String, Integer>() {
+                    @Override
+                    public void onNext(Integer result) {
 
+                    }
+                })
+                .merge(A2, A2, A3)
+                .addOnEventListener(new OnEventNextListener<String, Object[]>() {
+                    @Override
+                    public void onNext(Object[] result) {
 
+                    }
+                })
+                .apply(it -> it[0])
+                .chain(A4)
+                .chain(A2)
+                .start();
 
 
     }
