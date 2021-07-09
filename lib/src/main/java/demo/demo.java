@@ -10,7 +10,7 @@ import com.acap.ec.listener.OnEventNextListener;
  * Created by ACap on 2021/7/8 15:58
  * </pre>
  */
-public class Demo {
+public class demo {
 
     public static void main(String[] args) {
 

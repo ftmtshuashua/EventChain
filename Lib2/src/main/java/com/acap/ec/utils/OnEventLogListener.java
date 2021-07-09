@@ -10,7 +10,7 @@ import com.acap.ec.listener.OnEventListener;
  * Created by ACap on 2021/3/31 11:32
  * </pre>
  */
-public class OnEventLogListener<P,R> implements OnEventListener<P,R> {
+public class OnEventLogListener<P, R> implements OnEventListener<P, R> {
     private String mTag;
 
     public OnEventLogListener(String mTag) {
@@ -20,18 +20,18 @@ public class OnEventLogListener<P,R> implements OnEventListener<P,R> {
 
     @Override
     public void onStart(P params) {
-        EUtils.i(mTag, "onStart()");
+        EUtils.i(mTag, String.format("onStart(%s)", params));
 
     }
 
     @Override
     public void onError(Throwable e) {
-        EUtils.e(mTag, "onError(" + e + ")");
+        EUtils.e(mTag, String.format("onError(%s)", e));
     }
 
     @Override
     public void onNext(R result) {
-        EUtils.i(mTag, "onNext(" + result + ")");
+        EUtils.i(mTag, String.format("onNext(%s)", result));
     }
 
     @Override
