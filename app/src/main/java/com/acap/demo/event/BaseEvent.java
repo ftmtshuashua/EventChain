@@ -1,6 +1,8 @@
 package com.acap.demo.event;
 
+import com.acap.demo.utils.Utils;
 import com.acap.ec.Event;
+import com.acap.ec.utils.EUtils;
 
 /**
  * <pre>
@@ -13,10 +15,10 @@ import com.acap.ec.Event;
 public abstract class BaseEvent<P, R> extends Event<P, R> {
     @Override
     protected final void onCall(P params) {
-//        if (Utils.getSmallProbabilityEvent(2)) {
-//            EUtils.i("onInterrupt", String.format("{%s}.call()", EUtils.id(this)));
-//            interrupt();
-//        }
+        if (Utils.getSmallProbabilityEvent(2)) {
+            EUtils.i("finish", String.format("{%s}.call()", EUtils.id(this)));
+            finish();
+        }
 
         onChildCall(params);
 

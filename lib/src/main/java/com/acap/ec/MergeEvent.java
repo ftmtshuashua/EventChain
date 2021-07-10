@@ -1,15 +1,16 @@
 package com.acap.ec;
 
+
+import com.acap.ec.action.Action1;
 import com.acap.ec.excption.MergeException;
-import com.acap.ec.internal.ILinkableEvent;
-import com.acap.ec.listener.OnChainListener;
-import com.acap.ec.utils.ListMap;
+import com.acap.ec.internal.EventLifecycle;
+import com.acap.ec.listener.OnEventListener;
+import com.acap.ec.utils.AtomicCount;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <pre>
@@ -21,114 +22,185 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </pre>
  */
 public class MergeEvent<P, R> extends Event<P, R[]> {
-    private final List<Event<P, R>> mEvents = new ArrayList<>();
-    private final Map<Event<P, R>, R> mForkResults = new HashMap<>();
-    private final ListMap<Event<P, R>> mListMap = new ListMap(mEvents);
 
-    /*事件计数器，用与识别所有并发事件全部执行完成*/
-    private final AtomicInteger mForkResultCount = new AtomicInteger(0);
+    private ILinkable<P, R>[] mEvents;
+    private final Map<ILinkable, EventResult<P, R>> mEventResult = new HashMap<>();
+    private final AtomicCount mResultCount = new AtomicCount(0);
 
-    public <T extends ILinkableEvent<P, ? extends R,T>> MergeEvent(T... chains) {
-        if (chains != null) {
-            for (int i = 0; i < chains.length; i++) {
-                Event event = chains[i];
-                if (event == null) continue;
-                mEvents.add(event);
+    private void mapEvents(Action1<ILinkable<P, R>> action) {
+        if (mEvents != null) {
+            for (int i = 0; i < mEvents.length; i++) {
+                action.call(mEvents[i]);
             }
-
-            mListMap.map(prEvent -> prEvent.addOnChainListener(mChainListener));
         }
     }
+
+    public <T extends ILinkable<P, ? extends R>> MergeEvent(T... chains) {
+        mEvents = (ILinkable<P, R>[]) chains;
+
+        mapEvents(it -> {
+            if (it != null) {
+                it.setLifecycle(getLifecycle());
+                it.addOnEventListener(new AtomicEventListener(it));
+            }
+        });
+    }
+
+
+    @Override
+    public void onPrepare(P params) {
+        super.onPrepare(params);
+        mResultCount.reset();
+    }
+
 
     @Override
     protected void onCall(P params) {
-        mForkResultCount.set(0);
-        if (mEvents.isEmpty()) {
-            next(null);
-        } else {
-            for (int i = 0; i < mEvents.size(); i++) {
-                mEvents.get(i).start(params);
-            }
-        }
-    }
-
-    @Override
-    public void finish() {
-        super.finish();
-        mListMap.map(prEvent -> prEvent.finish());
-    }
-
-    @Override
-    protected void onInterrupt() {
-        super.onInterrupt();
-        mListMap.map(prEvent -> prEvent.interrupt());
-    }
-
-    private final OnChainListener mChainListener = new OnChainListener<R>() {
-        @Override
-        public void onChainStart() {
-        }
-
-        @Override
-        public void onEventStart(Event node) {
-            getChain().onStart(node);
-        }
-
-        @Override
-        public void onEventError(Event node, Throwable throwable) {
-            getChain().onError(node, throwable);
-        }
-
-        @Override
-        public void onNext(Event node, R result) {
-            mForkResults.put(node, result);
-            getChain().onNext(node, result);
-        }
-
-        @Override
-        public void onChainComplete() {
-            mForkResultCount.incrementAndGet();
-            final int size = mEvents.size();
-            int count = mForkResultCount.intValue();
-            if (size != count) return;
-            if (size < count)
-                throw new RuntimeException("并发事件计数器异常,接收的完成信号数量超过的事件的数量,排查某个事件是否发出多个Complete信号");
-
-            //检查是否有异常
-            List<Throwable> throwable = new ArrayList<>();
-            for (int i = 0; i < size; i++) {
-
-                Chain chain = mEvents.get(i).getChain();
-                if (chain.isError()) {
-                    throwable.add(chain.getError());
-                }
-            }
-
-            //如果有异常就抛出错误
-            if (throwable.isEmpty()) {
-                List<R> result = new ArrayList<>();
-                for (Event<P, ? extends R> eventChain : mEvents) {
-                    result.add(mForkResults.get(eventChain));
-                }
-                MergeEvent.this.next((R[]) result.toArray());
+        mapEvents(it -> {
+            if (it != null) {
+                it.start(params);
             } else {
-                if (throwable.size() == 1) {
-                    MergeEvent.this.error(throwable.get(0));
-                } else {
-                    MergeException exception = new MergeException();
-                    for (int i = 0; i < throwable.size(); i++) {
-                        Throwable err = throwable.get(i);
-                        exception.put(err);
-                    }
-                    MergeEvent.this.error(exception);
-                }
+                mResultCount.increase();
+            }
+        });
+        verify();
+    }
+
+    @Override
+    public void setLifecycle(EventLifecycle lifecycle) {
+        super.setLifecycle(lifecycle);
+        mapEvents(it -> {
+            if (it != null) {
+                it.setLifecycle(lifecycle);
+            }
+        });
+    }
+
+    /*验证事件是否完成*/
+    private void verify() {
+        int size = mEvents == null ? 0 : mEvents.length;
+        if (size == 0) {
+            next();
+        } else if (size == mResultCount.getValue()) {
+            Throwable throwable = getThrowable();
+            if (throwable != null) {
+                error(throwable);
+            } else {
+                next((R[]) getResult().toArray());
             }
         }
-    };
+    }
+
+    /**
+     * 获得事件中发生的错误，请在所有事件都拿到结果之后调用
+     *
+     * @return
+     */
+    private Throwable getThrowable() {
+        List<Throwable> errors = new ArrayList<>();
+
+        mapEvents(it -> {
+            if (it != null) {
+                EventResult<P, R> result = mEventResult.get(it);
+                if (result.isError()) {
+                    Throwable throwable = result.getThrowable();
+                    errors.add(throwable);
+                }
+            }
+        });
+
+        if (!errors.isEmpty()) {
+            if (errors.size() == 1) {
+                return errors.get(0);
+            } else {
+                MergeException exception = new MergeException();
+                for (int i = 0; i < errors.size(); i++) {
+                    exception.put(errors.get(i));
+                }
+                return exception;
+            }
+        }
+        return null;
+    }
+
+    private List<R> getResult() {
+        List<R> arrays = new ArrayList<>();
+
+        mapEvents(it -> {
+            if (it == null) {
+                arrays.add(null);
+            } else {
+                arrays.add(mEventResult.get(it).getResult());
+            }
+        });
+
+        return arrays;
+    }
+
+    /**
+     * 同步的事件监听
+     */
+    private class AtomicEventListener implements OnEventListener<P, R> {
+        private ILinkable mILinkable;
+
+        public AtomicEventListener(ILinkable mILinkable) {
+            this.mILinkable = mILinkable;
+        }
+
+        @Override
+        public void onStart(P params) {
+
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            mEventResult.put(mILinkable, new EventResult(mILinkable, e));
+            mResultCount.increase();
+        }
+
+        @Override
+        public void onNext(R result) {
+            mEventResult.put(mILinkable, new EventResult(mILinkable, result));
+            mResultCount.increase();
+        }
+
+        @Override
+        public void onComplete() {
+            verify();
+        }
+    }
 
 
-    public List<Event<P, R>> getEvents() {
-        return mEvents;
+    private static final class EventResult<P, R> {
+        private ILinkable<P, R> mEvent;
+        private Throwable mThrowable;
+        private R mResult;
+
+        private boolean mIsError;
+
+        public EventResult(ILinkable<P, R> mEvent, R result) {
+            this.mEvent = mEvent;
+            this.mResult = result;
+            this.mIsError = false;
+        }
+
+        public EventResult(ILinkable<P, R> mEvent, Throwable throwable) {
+            this.mEvent = mEvent;
+            this.mThrowable = throwable;
+            this.mIsError = true;
+        }
+
+        public boolean isError() {
+            return mIsError;
+        }
+
+        public Throwable getThrowable() {
+            return mThrowable;
+        }
+
+        public R getResult() {
+            return mResult;
+        }
     }
 
 }

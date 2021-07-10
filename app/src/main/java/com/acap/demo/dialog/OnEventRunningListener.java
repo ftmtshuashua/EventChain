@@ -3,8 +3,7 @@ package com.acap.demo.dialog;
 import android.view.View;
 
 import com.acap.demo.utils.ThreadHelper;
-import com.acap.ec.Event;
-import com.acap.ec.listener.OnChainListener;
+import com.acap.ec.listener.OnEventListener;
 
 /**
  * <pre>
@@ -14,7 +13,7 @@ import com.acap.ec.listener.OnChainListener;
  * Created by ACap on 2021/7/5 22:23
  * </pre>
  */
-public class OnEventRunningListener implements OnChainListener {
+public class OnEventRunningListener<P, R> implements OnEventListener<P, R> {
 
     private View mV_Show;
     private View mV_Hint;
@@ -31,28 +30,24 @@ public class OnEventRunningListener implements OnChainListener {
         });
     }
 
+
     @Override
-    public void onChainStart() {
+    public void onStart(P params) {
         show(true);
     }
 
     @Override
-    public void onEventStart(Event event) {
+    public void onError(Throwable e) {
 
     }
 
     @Override
-    public void onEventError(Event event, Throwable throwable) {
+    public void onNext(R result) {
 
     }
 
     @Override
-    public void onEventNext(Event event, Object result) {
-
-    }
-
-    @Override
-    public void onChainComplete() {
+    public void onComplete() {
         show(false);
     }
 }

@@ -43,4 +43,21 @@ public class Utils {
         return Utils.random(probability) == (probability - 1) / 2;
     }
 
+
+    public static String getUserName() {
+        if (Utils.getSmallProbabilityEvent(2)) {
+            return "Vip888";
+        }
+        if (Utils.getSmallProbabilityEvent(2)) {
+            return "Gm666";
+        }
+        if (Utils.getSmallProbabilityEvent(2)) {
+            return "PM333";
+        }
+        if (Utils.getSmallProbabilityEvent(2)) {
+            return "小明";
+        }
+        return "";
+    }
+
 }

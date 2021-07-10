@@ -1,6 +1,7 @@
 package com.acap.ec;
 
 import com.acap.ec.action.Apply;
+import com.acap.ec.internal.EventLifecycle;
 import com.acap.ec.listener.OnEventListener;
 
 /**
@@ -11,7 +12,6 @@ import com.acap.ec.listener.OnEventListener;
  *
  * @param <P> 对象入参类型 - 表示该对象接收参数的类型
  * @param <R> 对象出参类型 - 表示对象执行结束后的结果类型
- * @param <T> 泛型递归 - 用于确定函数的返回值类型
  *
  * Created by ACap on 2021/7/8 16:29
  * </pre>
@@ -19,20 +19,11 @@ import com.acap.ec.listener.OnEventListener;
 public interface ILinkable<P, R> {
 
     /**
-     *
+     * 将另一个可链接的对象放到该对象的后面,这样就能确定当前对象和链接对象的顺序关系
      *
      * @param event 被链接到当前对象之后的对象
      * @param <R1>  被连接对象的出参类型
-     * @param <TR>  储存了‘链’的入参和出参对象，‘链’的入参应该是‘链’头对象的入参，而‘链’的出参应该为链尾对象的出参
-     * @param <TP>  被连接对象的类型
      * @return 包含对象连接关系的‘链’对象
-     */
-    /**
-     * 将另一个可链接的对象放到该对象的后面,这样就能确定当前对象和链接对象的顺序关系
-     *
-     * @param event
-     * @param <R1>
-     * @return
      */
     <R1> ILinkable<P, R1> chain(ILinkable<? super R, R1> event);
 
@@ -40,12 +31,14 @@ public interface ILinkable<P, R> {
 
     <R1> ILinkable<P, R1> apply(Apply<R, R1> apply);
 
+    /**
+     * @hide
+     **/
     void onAttachedToChain(Chain chain);
 
     void start();
 
     void start(P params);
-
 
     /**
      * 添加对象监听器
@@ -66,23 +59,29 @@ public interface ILinkable<P, R> {
 
     boolean isComplete();
 
-    //
-    void onPrepare();
-//
-//
-//    void interrupt();
-//
-//    void onInterrupt();
-//
-//
-//    boolean isInterrupt();
-//
-//    void onComplete();
-//
-//
-//
-//    void finish();
-//
-//    boolean isFinish();
+    /**
+     * @hide
+     **/
+    void onPrepare(P params);
+
+    /**
+     * @hide
+     **/
+    void onComplete();
+
+
+    void finish();
+
+    boolean isFinish();
+
+    /**
+     * @hide
+     **/
+    void onFinish();
+
+    void setLifecycle(EventLifecycle lifecycle);
+
+    EventLifecycle getLifecycle();
+
 
 }

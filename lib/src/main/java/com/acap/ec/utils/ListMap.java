@@ -2,7 +2,7 @@ package com.acap.ec.utils;
 
 import com.acap.ec.action.Action1;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * <pre>
@@ -13,9 +13,9 @@ import java.util.List;
  * </pre>
  */
 public class ListMap<T> {
-    private List<T> mList;
+    private Collection<T> mList;
 
-    public ListMap(List<T> mList) {
+    public ListMap(Collection<T> mList) {
         this.mList = mList;
     }
 

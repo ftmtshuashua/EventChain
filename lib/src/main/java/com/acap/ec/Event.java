@@ -1,219 +1,154 @@
 package com.acap.ec;
 
 import com.acap.ec.action.Apply;
-import com.acap.ec.excption.EventInterruptException;
+import com.acap.ec.internal.EventLifecycle;
 import com.acap.ec.internal.EventState;
-import com.acap.ec.listener.OnChainListener;
 import com.acap.ec.listener.OnEventListener;
 import com.acap.ec.utils.ListenerMap;
 
 /**
  * <pre>
  * Tip:
- *      事件链是一种尝试
- *      将任何业务逻辑抽象成一个事件,该事件只关心自己的业务逻辑
  *
- * @param <P> params:上游事件完成之后的产物
- * @param <R> result:当前事件的产物
- * Created by ACap on 2021/3/29 18:12
+ *
+ * Created by ACap on 2021/7/9 18:59
  * </pre>
  */
-public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>>, IEvent<R> {
-
-    /**
-     * 事件所在的‘链’，
-     */
-    Chain<?, ?> mChain;
-    Event<R, ?> mNext;
+public abstract class Event<P, R> implements ILinkable<P, R> {
 
     private EventState mEventState = EventState.READY;
 
-    private final ListenerMap<OnEventListener<P, R>> mOnEventListeners = new ListenerMap<>();
+    private Chain mChain;
+    private final ListenerMap<OnEventListener<P, R>> mListeners = new ListenerMap<>();
 
-
-    public Chain getChain() {
-        if (mChain == null) {
-            mChain = new Chain<>(this);
-        }
-        return mChain;
+    @Override
+    public <R1> ILinkable<P, R1> chain(ILinkable<? super R, R1> event) {
+        return Chain.generate(this, event);
     }
 
-    void setChain(Chain chain) {
+    @Override
+    public <R1> ILinkable<P, R1[]> merge(ILinkable<? super R, ? extends R1>... events) {
+        return Chain.generate(this, new MergeEvent(events));
+    }
+
+    @Override
+    public <R1> ILinkable<P, R1> apply(Apply<R, R1> apply) {
+        return Chain.generate(this, new ApplyEvent<>(apply));
+    }
+
+    @Override
+    public void onAttachedToChain(Chain chain) {
         mChain = chain;
-        if (mNext != null) mNext.setChain(chain);
     }
 
-    @Override
-    public <R1> Chain<P, R1> chain(ILinkableEvent<? super R, R1, ?> event) {
-        mNext = (Event<R, ?>) event;
-        mNext.setChain(getChain());
-        return getChain();
+    /**
+     * 当事件逻辑执行完成时候,请调用该函数来通知链上下一个事件
+     */
+    protected void next() {
+        next(null);
     }
 
-    @Override
-    public <R1, T extends ILinkableEvent<? super R, ? extends R1, ?>> Chain<P, R1[]> merge(T... events) {
-        return chain(new MergeEvent(events));
+    /**
+     * 当事件逻辑执行完成时候,请调用该函数来通知链上下一个事件
+     *
+     * @param result 当前事件的出参 - 表示事件执行结束后的结果
+     */
+    protected synchronized void next(R result) {
+        if (isComplete() || isFinish()) return;
+
+        getLifecycle().onNext(this, result);
+        mListeners.map(it -> it.onNext(result));
+        if (isFinish()) return;
+
+        performEventComplete();
+        if (mChain != null) {
+            mChain.performOnEventNext(this, result);
+        }
     }
 
-    @Override
-    public <R1> Chain<P, R1> apply(Apply<R, R1> apply) {
-        return chain(new ApplyEvent<>(apply));
+    /**
+     * <pre>
+     * 如果当前事件的逻辑执行时遇到一些问题，并且不希望后续的事件继续执行时。
+     * 请调用该函数,用于通知'链'
+     * </pre>
+     *
+     * @param throwable 当前事件的异常信息
+     */
+    protected synchronized void error(Throwable throwable) {
+        if (isComplete() || isFinish()) return;
+
+        getLifecycle().onError(this, throwable);
+        mListeners.map(it -> it.onError(throwable));
+
+        if (isFinish()) return;
+
+        performEventComplete();
+        if (mChain != null) {
+            mChain.performOnEventError(this, throwable);
+        }
+    }
+
+    //事件完成
+    void performEventComplete() {
+        getLifecycle().onComplete(this);
+        onComplete();
+        mListeners.map(it -> it.onComplete());
     }
 
 
     @Override
     public void start() {
-        getChain().start();
+        start(null);
     }
 
     @Override
     public void start(P params) {
-        getChain().start(params);
+        performStart(params);
     }
 
-
-    /**
-     * <pre>
-     * 检查事件的状态，并执行事件的逻辑
-     *  1.如果事件未就绪，则不执行逻辑
-     *  2.如果事件已结束，则直接完成事件所在的链
-     *  3.如果事件已就绪并且未结束，则执行事件的逻辑
-     * </pre>
-     *
-     * @param params 事件入参，该参数将被当作{@link #onCall(Object)}方法的参数传入
-     */
     void performStart(P params) {
+        if (isStart()) return;
+
+        if (isFinish()) return;
+
         mEventState = EventState.READY;
+        onPrepare(params);
 
-        if (isFinish()) {
-            performChainComplete();
-        } else {
-            onPrepare();
+        if (isFinish()) return;
 
-            mEventState = EventState.START;
-            mOnEventListeners.map(listener -> listener.onStart(params));
-            getChain().performOnEventStart(this, params);
-            onCall(params);
-        }
-    }
+        mEventState = EventState.START;
+        getLifecycle().onStart(this, params);
+        mListeners.map(it -> it.onStart(params));
 
-    @Override
-    public void next() {
-        next(null);
+        if (isFinish()) return;
+
+        onCall(params);
     }
 
 
     /**
-     * 检查活动状态
-     */
-    private final boolean checkAlive() {
-        if (isComplete() || !isStart()) {
-            return false;
-        }
-        if (isFinish()) {
-            performEventComplete();
-            performChainComplete();
-            return false;
-        }
-        if (isInterrupt()) {
-            performEventInterrupt();
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public void next(R result) {
-        if (checkAlive()) {
-            mOnEventListeners.map(listener -> listener.onNext(result));
-            getChain().performOnEventNext(this, result);
-
-            mEventState = EventState.COMPLETE;
-            performEventComplete();
-            getChain().performEventNextComplete(this, result);
-        }
-    }
-
-    @Override
-    public void error(Throwable throwable) {
-        if (checkAlive()) {
-            performEventError(throwable);
-        }
-    }
-
-    /**
-     * 执行打断的逻辑
-     */
-    private final void performEventInterrupt() {
-        onInterrupt();
-        performEventError(new EventInterruptException());
-    }
-
-    /**
-     * 执行事件错误的逻辑
+     * 事件的逻辑函数.事件的逻辑从该函数开始执行,以该调用完成函数之后结束
      *
-     * @param throwable 事件中发生的错误
+     * @param params 事件入参
      */
-    private final void performEventError(Throwable throwable) {
+    protected abstract void onCall(P params);
 
-        mOnEventListeners.map(listener -> listener.onError(throwable));
-        getChain().performOnEventError(this, throwable);
-
-        mEventState = EventState.COMPLETE;
-        performEventComplete();
-        getChain().performEventErrorComplete(this, throwable);
+    @Override
+    public ILinkable<P, R> addOnEventListener(OnEventListener<P, R> listener) {
+        mListeners.register(listener);
+        return this;
     }
 
-
-    /**
-     * 执行事件的完成逻辑
-     */
-    private final void performEventComplete() {
-        onComplete();
-        mOnEventListeners.map(listener -> listener.onComplete());
-    }
-
-    /**
-     * 执行链的完成逻辑
-     */
-    private final void performChainComplete() {
-        getChain().performComplete();
+    @Override
+    public ILinkable<P, R> removeOnEventListener(OnEventListener listener) {
+        mListeners.unregister(listener);
+        return this;
     }
 
 
     @Override
-    public void onPrepare() {
-
-    }
-
-    @Override
-    public void onComplete() {
-
-    }
-
-    @Override
-    public void onInterrupt() {
-
-    }
-
-    @Override
-    public void finish() {
-        getChain().finish();
-    }
-
-    @Override
-    public void interrupt() {
-        getChain().interrupt();
-    }
-
-    @Override
-    public boolean isInterrupt() {
-        return getChain().isInterrupt();
-    }
-
-    @Override
-    public boolean isFinish() {
-        return getChain().isFinish();
+    public boolean isStart() {
+        return mEventState == EventState.START;
     }
 
     @Override
@@ -222,32 +157,51 @@ public abstract class Event<P, R> implements ILinkableEvent<P, R, Event<P, R>>, 
     }
 
     @Override
-    public boolean isStart() {
-        return mEventState == EventState.START;
+    public void onPrepare(P params) {
     }
 
     @Override
-    public Event<P, R> addOnEventListener(OnEventListener<P, R> listener) {
-        mOnEventListeners.register(listener);
-        return this;
+    public void onComplete() {
+        mEventState = EventState.COMPLETE;
+
+    }
+
+    private EventLifecycle mLifecycle;
+
+    @Override
+    public void finish() {
+        getLifecycle().finish();
     }
 
     @Override
-    public Event<P, R> removeOnEventListener(OnEventListener listener) {
-        mOnEventListeners.unregister(listener);
-        return this;
+    public boolean isFinish() {
+        return getLifecycle().isFinish();
     }
 
     @Override
-    public Event<P, R> addOnChainListener(OnChainListener<P, R> listener) {
-        getChain().addOnChainListener(listener);
-        return this;
+    public void onFinish() {
+        performEventComplete();
+    }
+
+
+    @Override
+    public void setLifecycle(EventLifecycle lifecycle) {
+        if (mLifecycle == lifecycle) return;
+        mLifecycle = lifecycle;
+        if (mChain != null) {
+            mChain.setLifecycle(lifecycle);
+        }
     }
 
     @Override
-    public Event<P, R> removeOnChainListener(OnChainListener listener) {
-        getChain().addOnChainListener(listener);
-        return this;
+    public EventLifecycle getLifecycle() {
+        if (mChain == null) {
+            if (mLifecycle == null) {
+                mLifecycle = new EventLifecycle();
+            }
+            return mLifecycle;
+        }
+        return mChain.getLifecycle();
     }
+
 }
-
