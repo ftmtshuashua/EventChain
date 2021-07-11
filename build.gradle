@@ -1,31 +1,29 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
+        maven { url "https://jitpack.io" }
         google()
         jcenter()
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.1.2"
+        classpath 'com.android.tools.build:gradle:4.1.2'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
     }
 }
 
 allprojects {
     repositories {
-        maven { url 'https://www.jitpack.io' }
+        maven { url 'https://jitpack.io' }
         google()
         jcenter()
         mavenCentral()
     }
-    tasks.withType(Javadoc) {
-        options { encoding "UTF-8" charSet 'UTF-8' links "http://docs.oracle.com/javase/7/docs/api" }
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
-}
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
 }
