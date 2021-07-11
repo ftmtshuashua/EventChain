@@ -8,6 +8,7 @@ package com.acap.ec;
  *
  * Created by ACap on 2021/7/9 23:26
  * </pre>
+ * @author A·Cap
  */
 public abstract class SimpleEvent<T> extends Event<T, T> {
 

@@ -11,7 +11,7 @@ import com.acap.ec.Event;
  * Created by ACap on 2021/7/3 16:49
  * </pre>
  */
-public class E_TimeOut<R> extends BaseEvent<Object, R> {
+public class E_TimeOut<R> extends Event<Object, R> {
     private long time;
 
     public E_TimeOut(long time) {

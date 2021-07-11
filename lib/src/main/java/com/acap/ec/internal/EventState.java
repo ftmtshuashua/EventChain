@@ -9,6 +9,7 @@ package com.acap.ec.internal;
  *
  * Created by ACap on 2021/7/8 22:10
  * </pre>
+ * @author A·Cap
  */
 public enum EventState {
     /**

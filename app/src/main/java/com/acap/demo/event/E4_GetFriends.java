@@ -2,12 +2,9 @@ package com.acap.demo.event;
 
 import com.acap.demo.mode.ModelFriends;
 import com.acap.demo.mode.ModelUserDetail;
-import com.acap.demo.mode.ModelUserLogin;
 import com.acap.demo.utils.ThreadHelper;
 import com.acap.demo.utils.Utils;
 import com.acap.ec.Event;
-
-import java.text.MessageFormat;
 
 /**
  * <pre>
@@ -17,7 +14,7 @@ import java.text.MessageFormat;
  * Created by ACap on 2021/7/3 16:58
  * </pre>
  */
-public class E4_GetFriends extends BaseEvent<ModelUserDetail, ModelFriends> {
+public class E4_GetFriends extends Event<ModelUserDetail, ModelFriends> {
 
     @Override
     protected void onChildCall(ModelUserDetail params) {

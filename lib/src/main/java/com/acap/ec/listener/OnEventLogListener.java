@@ -1,5 +1,6 @@
 package com.acap.ec.listener;
 
+import com.acap.ec.ILinkable;
 import com.acap.ec.listener.OnEventListener;
 import com.acap.ec.utils.EUtils;
 
@@ -10,6 +11,7 @@ import com.acap.ec.utils.EUtils;
  *
  * Created by ACap on 2021/3/31 11:32
  * </pre>
+ * @author A·Cap
  */
 public class OnEventLogListener<P, R> implements OnEventListener<P, R> {
     private String mTag;
@@ -19,8 +21,9 @@ public class OnEventLogListener<P, R> implements OnEventListener<P, R> {
     }
 
 
+
     @Override
-    public void onStart(P params) {
+    public void onStart(ILinkable<P, R> event,P params) {
         EUtils.i(mTag, String.format("onStart(%s)", params));
 
     }

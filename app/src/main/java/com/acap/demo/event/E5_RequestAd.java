@@ -11,7 +11,7 @@ import com.acap.ec.Event;
  * Created by ACap on 2021/7/3 16:58
  * </pre>
  */
-public class E5_RequestAd extends BaseEvent<Object, String> {
+public class E5_RequestAd extends Event<Object, String> {
 
     @Override
     protected void onChildCall(Object params) {

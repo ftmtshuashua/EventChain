@@ -1,8 +1,9 @@
-package com.acap.demo.dialog;
+package com.acap.demo.log;
 
 import android.view.View;
 
 import com.acap.demo.utils.ThreadHelper;
+import com.acap.ec.ILinkable;
 import com.acap.ec.listener.OnEventListener;
 
 /**
@@ -13,12 +14,12 @@ import com.acap.ec.listener.OnEventListener;
  * Created by ACap on 2021/7/5 22:23
  * </pre>
  */
-public class OnEventRunningListener<P, R> implements OnEventListener<P, R> {
+public class OnEventAnimation<P, R> implements OnEventListener<P, R> {
 
     private View mV_Show;
     private View mV_Hint;
 
-    public OnEventRunningListener(View mV_Show, View mV_Hint) {
+    public OnEventAnimation(View mV_Show, View mV_Hint) {
         this.mV_Show = mV_Show;
         this.mV_Hint = mV_Hint;
     }
@@ -30,11 +31,11 @@ public class OnEventRunningListener<P, R> implements OnEventListener<P, R> {
         });
     }
 
-
     @Override
-    public void onStart(P params) {
+    public void onStart(ILinkable<P, R> event, P params) {
         show(true);
     }
+
 
     @Override
     public void onError(Throwable e) {

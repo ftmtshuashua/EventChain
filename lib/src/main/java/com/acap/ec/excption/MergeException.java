@@ -11,6 +11,7 @@ import java.util.List;
  *
  * Created by ACap on 2021/3/29 18:12
  * </pre>
+ * @author A·Cap
  */
 public class MergeException extends RuntimeException {
     private final ArrayList<Throwable> arrays = new ArrayList<>();
@@ -66,7 +67,9 @@ public class MergeException extends RuntimeException {
      * 获得错误列表中第一个错误，如果错误列表为空则返回错误本身
      */
     public Throwable getFirst() {
-        if (isEmpty()) return this;
+        if (isEmpty()) {
+            return this;
+        }
         return arrays.get(0);
     }
 
@@ -78,7 +81,9 @@ public class MergeException extends RuntimeException {
             String message = getMessage();
             System.err.println("↓↓↓↓↓↓↓↓↓↓ " + message + " ↓↓↓↓↓↓↓↓↓↓");
             for (int i = 0; i < arrays.size(); i++) {
-                if (i != 0) System.err.println("------------------------------------");
+                if (i != 0) {
+                    System.err.println("------------------------------------");
+                }
                 arrays.get(i).printStackTrace();
             }
             System.err.println("↑↑↑↑↑↑↑↑↑↑ " + message + " ↑↑↑↑↑↑↑↑↑↑");
@@ -97,8 +102,10 @@ public class MergeException extends RuntimeException {
     }
 
 
-    private static final String getObjectId(Object object) {
-        if (object == null) return "Null_Obj";
+    private static String getObjectId(Object object) {
+        if (object == null) {
+            return "Null_Obj";
+        }
         return object.getClass().getSimpleName() + "(" + Integer.toHexString(System.identityHashCode(object)) + ")";
     }
 

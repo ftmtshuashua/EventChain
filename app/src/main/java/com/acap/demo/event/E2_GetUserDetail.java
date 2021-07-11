@@ -16,7 +16,7 @@ import java.text.MessageFormat;
  * Created by ACap on 2021/7/3 16:58
  * </pre>
  */
-public class E2_GetUserDetail extends BaseEvent<ModelUserLogin, ModelUserDetail> {
+public class E2_GetUserDetail extends Event<ModelUserLogin, ModelUserDetail> {
 
     @Override
     protected void onChildCall(ModelUserLogin params) {

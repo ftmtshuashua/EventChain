@@ -9,11 +9,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * Created by ACap on 2021/7/10 12:43
  * </pre>
+ *
+ * @author A·Cap
  */
 public class AtomicCount {
-    //默认的数
-    private int mDefaultValue;
-    private AtomicInteger mCount;
+    /**
+     * 用于初始化的默认值
+     */
+    private final int mDefaultValue;
+    private final AtomicInteger mCount;
 
     public AtomicCount(int defaultValue) {
         this.mDefaultValue = defaultValue;
@@ -34,9 +38,5 @@ public class AtomicCount {
     public int getValue() {
         return mCount.intValue();
     }
-
-//       mForkResultCount.incrementAndGet();
-//    final int size = mEvents.size();
-//    int count = mForkResultCount.intValue();
 }
 

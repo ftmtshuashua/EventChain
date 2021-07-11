@@ -1,5 +1,7 @@
 package com.acap.ec.listener;
 
+import com.acap.ec.ILinkable;
+
 /**
  * <pre>
  * Tip:
@@ -15,15 +17,17 @@ package com.acap.ec.listener;
  *
  * Created by ACap on 2021/3/29 18:12
  * </pre>
+ * @author A·Cap
  */
 public interface OnEventListener<P, R> {
 
     /**
      * 事件开始执行的信号
      *
+     * @param event
      * @param params 入参
      */
-    void onStart(P params);
+    void onStart(ILinkable<P, R> event, P params);
 
     /**
      * 当事件处理失败，并返回了失败的错误

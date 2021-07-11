@@ -20,17 +20,19 @@ import java.util.Map;
  *
  * Created by ACap on 2021/3/31 10:33
  * </pre>
+ *
+ * @author A·Cap
  */
 public class MergeEvent<P, R> extends Event<P, R[]> {
 
-    private ILinkable<P, R>[] mEvents;
-    private final Map<ILinkable, EventResult<P, R>> mEventResult = new HashMap<>();
+    private final ILinkable<P, R>[] mEvents;
+    private final Map<ILinkable<P, R>, EventResult<P, R>> mEventResult = new HashMap<>();
     private final AtomicCount mResultCount = new AtomicCount(0);
 
     private void mapEvents(Action1<ILinkable<P, R>> action) {
         if (mEvents != null) {
-            for (int i = 0; i < mEvents.length; i++) {
-                action.call(mEvents[i]);
+            for (ILinkable<P, R> mEvent : mEvents) {
+                action.call(mEvent);
             }
         }
     }
@@ -40,8 +42,7 @@ public class MergeEvent<P, R> extends Event<P, R[]> {
 
         mapEvents(it -> {
             if (it != null) {
-                it.setLifecycle(getLifecycle());
-                it.addOnEventListener(new AtomicEventListener(it));
+                it.listener(new AtomicEventListener(it));
             }
         });
     }
@@ -56,24 +57,16 @@ public class MergeEvent<P, R> extends Event<P, R[]> {
 
     @Override
     protected void onCall(P params) {
+        EventLifecycle lifecycle = getLifecycle();
         mapEvents(it -> {
             if (it != null) {
+                it.setLifecycle(lifecycle);
                 it.start(params);
             } else {
                 mResultCount.increase();
             }
         });
         verify();
-    }
-
-    @Override
-    public void setLifecycle(EventLifecycle lifecycle) {
-        super.setLifecycle(lifecycle);
-        mapEvents(it -> {
-            if (it != null) {
-                it.setLifecycle(lifecycle);
-            }
-        });
     }
 
     /*验证事件是否完成*/
@@ -148,7 +141,7 @@ public class MergeEvent<P, R> extends Event<P, R[]> {
         }
 
         @Override
-        public void onStart(P params) {
+        public void onStart(ILinkable<P, R> event, P params) {
 
         }
 

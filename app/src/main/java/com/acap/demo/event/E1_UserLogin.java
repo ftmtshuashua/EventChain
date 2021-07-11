@@ -13,7 +13,7 @@ import com.acap.ec.Event;
  * Created by ACap on 2021/7/3 16:49
  * </pre>
  */
-public class E1_UserLogin extends BaseEvent<String, ModelUserLogin> {
+public class E1_UserLogin extends Event<String, ModelUserLogin> {
 
     @Override
     protected void onChildCall(String params) {

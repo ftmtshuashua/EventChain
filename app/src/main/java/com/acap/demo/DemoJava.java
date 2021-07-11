@@ -15,8 +15,9 @@ class DemoJava {
     public static void main(String[] args) {
 
         s_i().chain(i_o().chain(o_s()))
+                .apply(params -> params)
                 .merge(s_i(), s_o())
-                .addOnEventListener(new OnEventLogListener<>("Chain"))
+                .listener(new OnEventLogListener<>("Chain"))
                 .start("123");
 
     }
@@ -66,7 +67,7 @@ class DemoJava {
             this.tag = tag;
             this.result = result;
 
-            addOnEventListener(new OnEventLogListener(this.tag));
+            listener(new OnEventLogListener(this.tag));
         }
 
         @Override

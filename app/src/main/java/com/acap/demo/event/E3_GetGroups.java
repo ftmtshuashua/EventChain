@@ -1,6 +1,5 @@
 package com.acap.demo.event;
 
-import com.acap.demo.mode.ModelFriends;
 import com.acap.demo.mode.ModelGroups;
 import com.acap.demo.mode.ModelUserDetail;
 import com.acap.demo.utils.ThreadHelper;
@@ -15,7 +14,7 @@ import com.acap.ec.Event;
  * Created by ACap on 2021/7/3 16:58
  * </pre>
  */
-public class E3_GetGroups extends BaseEvent<ModelUserDetail, ModelGroups> {
+public class E3_GetGroups extends Event<ModelUserDetail, ModelGroups> {
 
     @Override
     protected void onChildCall(ModelUserDetail params) {

@@ -12,6 +12,7 @@ import java.util.List;
  *
  * Created by ACap on 2021/6/30 14:24
  * </pre>
+ * @author A·Cap
  */
 public class ListenerMap<T> {
     private List<T> mArray = new ArrayList<>();
@@ -26,6 +27,13 @@ public class ListenerMap<T> {
             mArray.add(t);
         }
     }
+
+    public void registerAtFirst(T t) {
+        if (!mArray.contains(t)) {
+            mArray.add(0, t);
+        }
+    }
+
 
     /**
      * 移除监听器

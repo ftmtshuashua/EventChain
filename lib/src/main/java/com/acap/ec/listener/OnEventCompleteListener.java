@@ -1,5 +1,7 @@
 package com.acap.ec.listener;
 
+import com.acap.ec.ILinkable;
+
 /**
  * <pre>
  * Tip:
@@ -10,6 +12,7 @@ package com.acap.ec.listener;
  *
  * Created by ACap on 2021/3/29 18:12
  * </pre>
+ * @author A·Cap
  */
 @FunctionalInterface
 public interface OnEventCompleteListener<P,R> extends OnEventListener<P,R> {
@@ -22,8 +25,8 @@ public interface OnEventCompleteListener<P,R> extends OnEventListener<P,R> {
 
 
     @Override
-    default void onStart(P params) {
-    }
+    default void onStart(ILinkable<P, R> event, P params){}
+
 
     @Override
     default void onError(Throwable e) {

@@ -12,13 +12,14 @@ import com.acap.ec.utils.ListenerMap;
  *
  *
  * Created by ACap on 2021/7/9 18:59
+ * @author A·Cap
  * </pre>
  */
 public abstract class Event<P, R> implements ILinkable<P, R> {
 
     private EventState mEventState = EventState.READY;
 
-    private Chain mChain;
+    private Chain<?, ?> mChain;
     private final ListenerMap<OnEventListener<P, R>> mListeners = new ListenerMap<>();
 
     @Override
@@ -37,7 +38,7 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
     }
 
     @Override
-    public void onAttachedToChain(Chain chain) {
+    public void onAttachedToChain(Chain<?, ?> chain) {
         mChain = chain;
     }
 
@@ -54,11 +55,15 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
      * @param result 当前事件的出参 - 表示事件执行结束后的结果
      */
     protected synchronized void next(R result) {
-        if (isComplete() || isFinish()) return;
+        if (isComplete() || isFinish()) {
+            return;
+        }
 
         getLifecycle().onNext(this, result);
         mListeners.map(it -> it.onNext(result));
-        if (isFinish()) return;
+        if (isFinish()) {
+            return;
+        }
 
         performEventComplete();
         if (mChain != null) {
@@ -75,12 +80,16 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
      * @param throwable 当前事件的异常信息
      */
     protected synchronized void error(Throwable throwable) {
-        if (isComplete() || isFinish()) return;
+        if (isComplete() || isFinish()) {
+            return;
+        }
 
         getLifecycle().onError(this, throwable);
         mListeners.map(it -> it.onError(throwable));
 
-        if (isFinish()) return;
+        if (isFinish()) {
+            return;
+        }
 
         performEventComplete();
         if (mChain != null) {
@@ -88,10 +97,12 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
         }
     }
 
-    //事件完成
     void performEventComplete() {
         getLifecycle().onComplete(this);
         onComplete();
+        if (isFinish()) {
+            return;
+        }
         mListeners.map(it -> it.onComplete());
     }
 
@@ -107,20 +118,28 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
     }
 
     void performStart(P params) {
-        if (isStart()) return;
+        if (isStart()) {
+            return;
+        }
 
-        if (isFinish()) return;
+        if (isFinish()) {
+            return;
+        }
 
         mEventState = EventState.READY;
         onPrepare(params);
 
-        if (isFinish()) return;
+        if (isFinish()) {
+            return;
+        }
 
         mEventState = EventState.START;
         getLifecycle().onStart(this, params);
-        mListeners.map(it -> it.onStart(params));
+        mListeners.map(it -> it.onStart(Event.this, params));
 
-        if (isFinish()) return;
+        if (isFinish()) {
+            return;
+        }
 
         onCall(params);
     }
@@ -134,13 +153,19 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
     protected abstract void onCall(P params);
 
     @Override
-    public ILinkable<P, R> addOnEventListener(OnEventListener<P, R> listener) {
+    public ILinkable<P, R> listenerFirst(OnEventListener<P, R> listener) {
+        mListeners.registerAtFirst(listener);
+        return this;
+    }
+
+    @Override
+    public ILinkable<P, R> listener(OnEventListener<P, R> listener) {
         mListeners.register(listener);
         return this;
     }
 
     @Override
-    public ILinkable<P, R> removeOnEventListener(OnEventListener listener) {
+    public ILinkable<P, R> listenerRemove(OnEventListener listener) {
         mListeners.unregister(listener);
         return this;
     }
@@ -166,7 +191,6 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
 
     }
 
-    private EventLifecycle mLifecycle;
 
     @Override
     public void finish() {
@@ -184,11 +208,13 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
     }
 
 
+    private EventLifecycle mLifecycle;
+
     @Override
     public void setLifecycle(EventLifecycle lifecycle) {
-        if (mLifecycle == lifecycle) return;
-        mLifecycle = lifecycle;
-        if (mChain != null) {
+        if (mChain == null) {
+            mLifecycle = lifecycle;
+        } else {
             mChain.setLifecycle(lifecycle);
         }
     }

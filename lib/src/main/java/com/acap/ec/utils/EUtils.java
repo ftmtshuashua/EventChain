@@ -1,5 +1,9 @@
 package com.acap.ec.utils;
 
+import com.acap.ec.action.Action1;
+
+import java.util.Collection;
+
 /**
  * <pre>
  * Tip:
@@ -7,6 +11,8 @@ package com.acap.ec.utils;
  *
  * Created by ACap on 2021/3/31 11:34
  * </pre>
+ *
+ * @author A·Cap
  */
 public class EUtils {
     public static final String TAG = "Event";
@@ -74,4 +80,13 @@ public class EUtils {
         }
     }
 
+
+    /**
+     * 遍历列表中的数据
+     */
+    public static <T> void map(Collection<T> mList, Action1<T> action1) {
+        for (T t : mList) {
+            action1.call(t);
+        }
+    }
 }
