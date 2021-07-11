@@ -19,6 +19,8 @@ allprojects {
         jcenter()
         mavenCentral()
     }
+
+    //问题：编码GBK的不可映射字符
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
     }
