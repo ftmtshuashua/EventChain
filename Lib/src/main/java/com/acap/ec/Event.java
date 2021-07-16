@@ -55,7 +55,7 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
      * @param result 当前事件的出参 - 表示事件执行结束后的结果
      */
     protected synchronized void next(R result) {
-        if (isComplete() || isFinish()) {
+        if (!isStart() || isComplete() || isFinish()) {
             return;
         }
 
@@ -80,7 +80,7 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
      * @param throwable 当前事件的异常信息
      */
     protected synchronized void error(Throwable throwable) {
-        if (isComplete() || isFinish()) {
+        if (!isStart() || isComplete() || isFinish()) {
             return;
         }
 
