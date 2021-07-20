@@ -144,7 +144,6 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
         onCall(params);
     }
 
-
     /**
      * 事件的逻辑函数.事件的逻辑从该函数开始执行,以该调用完成函数之后结束
      *
@@ -170,7 +169,6 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
         return this;
     }
 
-
     @Override
     public boolean isStart() {
         return mEventState == EventState.START;
@@ -191,7 +189,6 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
 
     }
 
-
     @Override
     public void finish() {
         getLifecycle().finish();
@@ -208,6 +205,9 @@ public abstract class Event<P, R> implements ILinkable<P, R> {
     }
 
 
+    /**
+     * 事件的生命周期，只存在于链头
+     */
     private EventLifecycle mLifecycle;
 
     @Override
