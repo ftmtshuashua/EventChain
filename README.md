@@ -21,29 +21,15 @@ repositories {
 dependencies {
     implementation 'com.github.ftmtshuashua:EventChain:2.0.0-alpha3'
 }
-```-
+```
 
-
-强大的业务流程处理器基础组件，通过拓展它来实现复杂业务逻辑的流程化处理.
-- 源生Java实现
-- 链式事件处理
-- 支持事件并发
-- 支持事件动态插入
-- 增加事件间的数据传递
+Use
+--------
 
 
 
 
-## 使用
-将我们的业务封装为一个<kbd>EventChain</kbd>,实现<kbd>onCall()</kbd>方法.并在<kbd>onCall()</kbd>中处理自己的业务.
-> 每一个事件都有自己的入参和出参，根据需求指定他们.
-
-- <kbd>next()</kbd>:当前事件处理完成向下传递信号
-- <kbd>error()</kbd>:当前事件处理失败，抛出异常信息
-- <kbd>finish()</kbd>:停止链上的事件传递,事件信号将不会向下传递,但是会调用事件和链的完成回调函数
 
 
-
-## 配置依赖
 
 
