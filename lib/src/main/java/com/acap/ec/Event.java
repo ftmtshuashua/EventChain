@@ -2,13 +2,15 @@ package com.acap.ec;
 
 import com.acap.ec.action.Apply;
 import com.acap.ec.listener.OnEventListener;
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * <pre>
  * Tip:
- *      EventChain 的核心思想，业务逻辑的抽象
+ *      EventChain 的核心思想，业务逻辑的抽象.<br/>
+ *      使用请继承{@link BaseEvent}
  *
  *
  * @param <P> 输入 - 业务接收的参数
