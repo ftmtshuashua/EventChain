@@ -14,7 +14,8 @@ import com.acap.ec.listener.OnEventLogListener;
 class DemoJava {
     public static void main(String[] args) {
 
-        s_i().chain(i_o().chain(o_s()))
+        s_i()
+                .chain(i_o().chain(o_s()))
                 .apply(params -> params)
                 .merge(s_i(), s_o())
                 .listener(new OnEventLogListener<>("Chain"))

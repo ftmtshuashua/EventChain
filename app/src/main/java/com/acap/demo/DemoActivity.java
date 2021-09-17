@@ -42,8 +42,8 @@ public class DemoActivity extends Activity {
         //添加事件执行动画
         mDemoEvent.listener(new OnEventAnimation<>(findViewById(R.id.loading), findViewById(R.id.button)));
         mDemoEvent.listenerFirst((OnEventStartListener) (event, params) -> mViewLog.clean())
-        .listenerRemove(null)
-        .listenerRemove(null);
+                .listenerRemove(null)
+                .listenerRemove(null);
 
     }
 
@@ -52,7 +52,7 @@ public class DemoActivity extends Activity {
         mDemoEvent =
                 new DemoEvent<String, Integer>(mViewLog, 11)
 
-                        .chain(new DemoEvent<Integer, Object>(mViewLog, "c_1")   .setFinish())
+                        .chain(new DemoEvent<Integer, Object>(mViewLog, "c_1"))
                         .merge(new DemoEvent<Object, String>(mViewLog, "m-1"), new DemoEvent<Object, String>(mViewLog, "m-2"))
         ;
 
