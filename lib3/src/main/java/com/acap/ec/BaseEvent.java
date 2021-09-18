@@ -46,7 +46,7 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
      * @param isComplete 是否调用事件的 {@link OnEventListener#onComplete()} 回调
      */
     protected void onFinish(boolean isComplete) {
-        dispatchEventComplete(isComplete);
+        onComplete(isComplete);
     }
 
     /**
@@ -58,12 +58,7 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
         return mIsComplete;
     }
 
-    /**
-     * 分发事件完成状态
-     *
-     * @param isComplete
-     */
-    protected synchronized final void dispatchEventComplete(boolean isComplete) {
+    protected synchronized void onComplete(boolean isComplete) {
         if (!isComplete()) {
             boolean isCallCompleteListener = false;
             synchronized (this) {
@@ -73,26 +68,14 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
                 }
             }
 
-            if (isCallCompleteListener) {
-                onComplete();
-                if (isComplete) {
-                    mListener.map(OnEventListener::onComplete);
+            if (isCallCompleteListener && isComplete) {
+                mListener.map(OnEventListener::onComplete);
 
-                    if (mChain != null) {
-                        mChain.onChildComplete(this);
-                    }
+                if (mChain != null) {
+                    mChain.onChildComplete(this);
                 }
             }
-
-
         }
-    }
-
-    /**
-     * 当前事件完成时回调该方法,事件可以在这里做一个资源回收等操作
-     */
-    protected void onComplete() {
-
     }
 
     @Override
@@ -127,9 +110,9 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
     }
 
     /**
-     * 当前事件执行错误,当事件链中出现错误将停止并完成所有正在执行中的事件
+     * 当前事件执行错误
      *
-     * @param e 发生的错误信息
+     * @param e
      */
     protected void error(Throwable e) {
         if (!isComplete()) {
@@ -143,7 +126,7 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
      * 当前事件执行完成.注意已执行完成的事件将不再接收与发出任何参数
      */
     protected void complete() {
-        dispatchEventComplete(true);
+        onComplete(true);
     }
 
     @Override
@@ -151,9 +134,10 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
         return Events.chain(this, event);
     }
 
+
     @Override
     public <R1> Event<P, R1[]> merge(Event<? super R, ? extends R1>... events) {
-        return Events.chain(this, new MergeEvent(events));
+        return null;
     }
 
     @Override
@@ -187,12 +171,12 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         return super.equals(o);
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return super.hashCode();
     }
 }

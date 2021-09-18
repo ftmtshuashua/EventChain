@@ -34,5 +34,8 @@ public final class Events {
     public static <P, R, R1> Event<P, R1> chain(Event<P, R> head, Event<? super R, R1> tail) {
         return new Chain<>((BaseEvent<P, R>) head, (BaseEvent<? super R, R1>) tail);
     }
+//    public static <P, R, R1, Head extends Event<P, R>, Tail extends Event<? super R, R1>> Event<P, R1> chain(Head head, Tail tail) {
+//        return new Chain<>((BaseEvent<P, R>) head, (BaseEvent<? super R, R1>) tail);
+//    }
 
 }

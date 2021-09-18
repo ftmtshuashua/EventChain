@@ -54,7 +54,7 @@ public final class Chain<P, R, R1> extends BaseEvent<P, R1> {
         mIsComplete.put(event, true);
 
         if (mIsComplete.get(mHead) && mIsComplete.get(mTail)) {
-            dispatchEventComplete(true);
+            onComplete(true);
         }
     }
 
