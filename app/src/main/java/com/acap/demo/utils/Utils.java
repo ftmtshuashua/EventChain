@@ -60,4 +60,15 @@ public class Utils {
         return "";
     }
 
+
+    /**
+     * 获取对象的唯一ID
+     *
+     * @param object
+     * @return
+     */
+    public static final String id(Object object) {
+        if (object == null) return "Null_Obj";
+        return object.getClass().getSimpleName() + "(" + Integer.toHexString(System.identityHashCode(object)) + ")";
+    }
 }

@@ -6,6 +6,8 @@ import com.acap.ec.listener.OnEventListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * <pre>
  * Tip:
@@ -31,7 +33,6 @@ public interface Event<P, R> {
      */
     <R1> Event<P, R1> chain(@NotNull Event<? super R, R1> event);
 
-
     /**
      * 指定一组事件放到当前事件之后执行,并在当前事件执行结束之后将执行结果当作它们的输入参数发送给它们.<br/>
      * {@link #merge(Event[])}用于创建并发的逻辑结构,当前事件开始时同时执行事件组中的所有事件(如果它们是异步的),并保证事件组中所有事件全部完成之后才进行后续逻辑
@@ -40,8 +41,7 @@ public interface Event<P, R> {
      * @param <R1>   从事件集中统计出来的结果。并且输出的结果的顺序，与事件集的顺序相同
      * @return 并发逻辑事件
      */
-    <R1> Event<P, R1[]> merge(@NotNull Event<? super R, ? extends R1>... events);
-
+    <R1> Event<P, List<R1>> merge(@NotNull Event<? super R, ? extends R1>... events);
 
     /**
      * 对当前事件的输出结果进行处理,并生成新的结果<br/>
@@ -52,6 +52,16 @@ public interface Event<P, R> {
      * @return 链式逻辑事件
      */
     <R1> Event<P, R1> apply(@NotNull Apply<R, R1> apply);
+
+    /**
+     * 懒加载事件,使得传入的事件在被执行之前不会进行初始化.<br/>
+     * 对于某些需要在事件初始化时传入参数的事件非常有用
+     *
+     * @param apply 生成事件的回调函数
+     * @param <R1>  事件返回值
+     * @return 链式逻辑事件
+     */
+    <R1> Event<P, R1> lazy(@NotNull Apply<R, Event<R, R1>> apply);
 
     /**
      * 开始执行已构建完成的事件链<br/>

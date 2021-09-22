@@ -3,7 +3,7 @@ package com.acap.demo.log;
 import android.view.View;
 
 import com.acap.demo.utils.ThreadHelper;
-import com.acap.ec.ILinkable;
+import com.acap.ec.Event;
 import com.acap.ec.listener.OnEventListener;
 
 /**
@@ -32,7 +32,7 @@ public class OnEventAnimation<P, R> implements OnEventListener<P, R> {
     }
 
     @Override
-    public void onStart(ILinkable<P, R> event, P params) {
+    public void onStart(Event<P, R> event, P params) {
         show(true);
     }
 

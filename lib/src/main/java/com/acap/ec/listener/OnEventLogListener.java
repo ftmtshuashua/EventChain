@@ -27,17 +27,17 @@ public class OnEventLogListener<P, R> implements OnEventListener<P, R> {
 
     @Override
     public void onError(Throwable e) {
-        System.err.println(String.format("onError(%s)", mTag, e));
+        System.err.println(String.format("%s:onError(%s)", mTag, e));
     }
 
     @Override
     public void onNext(R result) {
-        System.out.println(String.format("onNext(%s)", mTag, result));
+        System.out.println(String.format("%s:onNext(%s)", mTag, result));
     }
 
     @Override
     public void onComplete() {
-        System.out.println(String.format("onComplete()", mTag));
+        System.out.println(String.format("%s:onComplete()", mTag));
     }
 
 }

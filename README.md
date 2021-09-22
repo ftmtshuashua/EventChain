@@ -1,7 +1,6 @@
 EventChain
 =====
 [![](https://jitpack.io/v/ftmtshuashua/EventChain.svg)](https://jitpack.io/#ftmtshuashua/EventChain)
-[![](https://img.shields.io/badge/android-1.0%2B-blue)]()
 [![](https://img.shields.io/badge/jdk-1.8%2B-blue)]()
 [![License Apache2.0](http://img.shields.io/badge/license-Apache2.0-brightgreen.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
@@ -23,9 +22,30 @@ dependencies {
 }
 ```
 
-Use
---------
+USE
+-----
 
+###### 创建业务事件并在之后执行
+```
+class SimperEvent() : BaseEvent<Int, Int>() {
+    override fun onCall(params: Int) {
+        val result = params * params
+        next(result)
+    }
+}
+
+//lesson 1
+SimperEvent()
+    .listener(OnEventNextListener { println("result:$it") })	//result:4
+    .start(2)
+	
+//lesson 2
+SimperEvent()
+    .listener(OnEventNextListener { println("result:$it") })	//result:4
+    .chain(SimperEvent())
+    .listener(OnEventNextListener { println("result:$it") })	//result:16
+    .start(2)
+```
 
 
 

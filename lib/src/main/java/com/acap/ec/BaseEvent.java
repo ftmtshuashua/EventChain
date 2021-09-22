@@ -5,6 +5,10 @@ import com.acap.ec.internal.ApplyEvent;
 import com.acap.ec.internal.ListenerMap;
 import com.acap.ec.listener.OnEventListener;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+
 /**
  * <pre>
  * Tip:
@@ -27,7 +31,7 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
     /**
      * 当事件附着到某个链上
      */
-    public void onAttachedToChain(Chain chain) {
+    protected void onAttachedToChain(Chain chain) {
         mChain = chain;
     }
 
@@ -98,6 +102,7 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
     @Override
     public void start(P params) {
         if (!isComplete()) {
+            mListener.map(listener -> listener.onStart(this, params));
             onCall(params);
         }
     }
@@ -152,15 +157,19 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
     }
 
     @Override
-    public <R1> Event<P, R1[]> merge(Event<? super R, ? extends R1>... events) {
-        return Events.chain(this, new MergeEvent(events));
+    public <R1> Event<P, List<R1>> merge(Event<? super R, ? extends R1>... events) {
+        return Events.chain(this, Events.merge(events));
     }
 
     @Override
     public <R1> Event<P, R1> apply(Apply<R, R1> apply) {
-        return Events.chain(this, new ApplyEvent<>(apply));
+        return Events.chain(this, Events.create(apply));
     }
 
+    @Override
+    public <R1> Event<P, R1> lazy(@NotNull Apply<R, Event<R, R1>> apply) {
+        return Events.chain(this, Events.lazy(apply));
+    }
 
     @Override
     public Event<P, R> listener(OnEventListener<P, R> listener) {

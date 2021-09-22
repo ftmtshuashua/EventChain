@@ -4,7 +4,6 @@ import com.acap.ec.internal.MergeException;
 import com.acap.ec.listener.OnEventListener;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by A·Cap on 2021/9/18 17:28
  * </pre>
  */
-public class MergeEvent<P, R> extends BaseEvent<P, R[]> {
+public class MergeEvent<P, R> extends BaseEvent<P,List<R>> {
 
     private final Event<P, R>[] mEvents;
 
@@ -54,8 +53,8 @@ public class MergeEvent<P, R> extends BaseEvent<P, R[]> {
                 }
             }
         } else {
-
-
+            next(Utils.getResult(mEvents, mEventResult));
+            complete();
         }
     }
 
@@ -218,9 +217,9 @@ public class MergeEvent<P, R> extends BaseEvent<P, R[]> {
             return err;
         }
 
-        public static final <P, R> R[] getResult(Event<P, R>[] events, Map<Event<P, R>, EventResult<P, R>> map) {
+        public static final <P, R> List<R> getResult(Event<P, R>[] events, Map<Event<P, R>, EventResult<P, R>> map) {
             if (events == null || events.length == 0) {
-                return null;
+                return new ArrayList<>();
             }
 
             List<R> array = new ArrayList<>();
@@ -238,15 +237,12 @@ public class MergeEvent<P, R> extends BaseEvent<P, R[]> {
                     array.add(null);
                 }
             }
-            return (R[]) array.toArray();
+            return array;
         }
 
         public static final <P, R> void init(Map<Event<P, R>, EventResult<P, R>> map) {
             if (map != null) {
-                Iterator<Event<P, R>> iterator = map.keySet().iterator();
-                while (iterator.hasNext()) {
-                    map.put(iterator.next(), null);
-                }
+                map.clear();
             }
         }
     }
