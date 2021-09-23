@@ -27,18 +27,22 @@ USE
 
 ###### 创建业务事件并在之后执行
 ```
-class SimperEvent() : BaseEvent<Int, Int>() {
+/**
+* 创建一个事件,该事件的入参是一个整形数据,出参也是一个整形数据.
+* 内部逻辑将入参平方后结束.
+*/
+class SimperEvent() : BaseEvent<Int, Int>() { 
     override fun onCall(params: Int) {
         next(params * params)
     }
 }
 
-//lesson 1
+//lesson 1 - 简单使用,并获取执行结果
 SimperEvent()
     .listener(OnEventNextListener { println("result:$it") })	//result:4
     .start(2)
 	
-//lesson 2
+//lesson 2 - 将多个事件组合求值
 SimperEvent()
     .listener(OnEventNextListener { println("result:$it") })	//result:4
     .chain(SimperEvent())
