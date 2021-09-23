@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.ftmtshuashua:EventChain:2.0.0-alpha3'
+    implementation 'com.github.ftmtshuashua:EventChain:2.0.2'
 }
 ```
 
