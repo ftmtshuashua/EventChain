@@ -1,5 +1,6 @@
-package com.acap.demo;
+package com.acap.demo.event;
 
+import com.acap.demo.event.DemoEvent;
 import com.acap.demo.utils.Utils;
 import com.acap.ec.BaseEvent;
 
@@ -11,7 +12,7 @@ import com.acap.ec.BaseEvent;
  * Created by A·Cap on 2021/9/22 9:48
  * </pre>
  */
-public class AddEvent extends BaseEvent<Integer, Integer> {
+public class AddEvent extends DemoEvent<Integer, Integer> {
 
     private Integer mResult;
 
@@ -28,8 +29,9 @@ public class AddEvent extends BaseEvent<Integer, Integer> {
         }
         int value = params + mResult;
 
-        System.out.println(String.format("%s : %s + %s = %s", Utils.id(this), params, mResult, value));
-        next(value);
-        complete();
+        new Thread(() -> {
+            System.out.println(String.format("%s : %s + %s = %s", Utils.id(this), params, mResult, value));
+            next(value);
+        }).start();
     }
 }

@@ -1,6 +1,7 @@
 package com.acap.ec;
 
 import com.acap.ec.action.Apply;
+import com.acap.ec.internal.ProxyEventListener;
 import com.acap.ec.listener.OnEventListener;
 
 /**
@@ -13,6 +14,7 @@ import com.acap.ec.listener.OnEventListener;
  */
 public class LazyEvent<P, R> extends BaseEvent<P, R> {
     private Apply<P, Event<P, R>> mLazy;
+    private Event<P, R> apply;
 
     public LazyEvent(Apply<P, Event<P, R>> mLazy) {
         this.mLazy = mLazy;
@@ -20,12 +22,20 @@ public class LazyEvent<P, R> extends BaseEvent<P, R> {
 
     @Override
     protected void onCall(P params) {
-        Event<P, R> apply = mLazy.apply(params);
-        apply.listener(mTurn);
+        apply = mLazy.apply(params);
+        apply.listener(new ProxyEventListener(mListener));
         apply.start(params);
     }
 
-    private OnEventListener<P, R> mTurn = new OnEventListener<P, R>() {
+    @Override
+    protected void onFinish(boolean isComplete) {
+        if (apply != null) {
+            apply.finish(isComplete);
+        }
+        super.onFinish(isComplete);
+    }
+
+    private OnEventListener<P, R> mListener = new OnEventListener<P, R>() {
 
         @Override
         public void onStart(Event<P, R> event, P params) {
@@ -44,7 +54,6 @@ public class LazyEvent<P, R> extends BaseEvent<P, R> {
 
         @Override
         public void onComplete() {
-            LazyEvent.this.complete();
         }
     };
 

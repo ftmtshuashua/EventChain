@@ -11,6 +11,7 @@ import java.util.List;
  *
  * Created by ACap on 2021/3/29 18:12
  * </pre>
+ *
  * @author A·Cap
  */
 public class MergeException extends RuntimeException {
@@ -97,7 +98,7 @@ public class MergeException extends RuntimeException {
         } else if (arrays.size() == 1) {
             return getFirst().getMessage();
         } else {
-            return "链中包含 " + arrays.size() + " 个异常需要处理!";
+            return String.format("The chain contains %s exceptions.", arrays.size());
         }
     }
 

@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * <pre>
  * Tip:
- *
+ *      用于确定链上两个事件的关系，并感知链的入参和出参
  *
  * Created by ACap on 2021/9/17 21:03
  * </pre>
@@ -35,28 +35,15 @@ public final class Chain<P, R, R1> extends BaseEvent<P, R1> {
     }
 
     @Override
-    protected void onFinish(boolean isComplete) {
+    protected final void onFinish(boolean isComplete) {
         mHead.onFinish(isComplete);
         mTail.onFinish(isComplete);
+        super.onFinish(isComplete);
     }
 
     @Override
-    protected void onCall(P params) {
+    protected final void onCall(P params) {
         mHead.start(params);
-    }
-
-    /**
-     * 当子事件完成时候的处理逻辑<br/>
-     * 如果处于链关系上的两个事件都完成，则认为当前链关系完成
-     *
-     * @param event
-     */
-    protected void onChildComplete(BaseEvent event) {
-        mIsComplete.put(event, true);
-
-        if (mIsComplete.get(mHead) && mIsComplete.get(mTail)) {
-            dispatchEventComplete(true);
-        }
     }
 
     /**
@@ -67,17 +54,24 @@ public final class Chain<P, R, R1> extends BaseEvent<P, R1> {
      * @param event  发起 {@link BaseEvent#next(Object)} 的事件
      * @param result 该事件的处理结果
      */
-    protected void onChildNext(BaseEvent event, Object result) {
-        if (!isComplete()) {
-            if (mHead == event) {
-                mTail.start((R) result);
-            } else if (mTail == event) {
-                next((R1) result);
-            } else {
-                throw new IllegalStateException("Event链路逻辑异常");
-            }
+    protected final void onChildNext(BaseEvent event, Object result) {
+        if (mHead == event) {
+            mTail.start((R) result);
+        } else if (mTail == event) {
+            next((R1) result);
+        } else {
+            throw new IllegalStateException(String.format("Chain error,%s not belong to current chain.", event));
         }
     }
 
 
+    /**
+     * 当链上事件发生错误时,则整条链路错误
+     *
+     * @param event 发生错误的节点
+     * @param e     发生的错误
+     */
+    protected final void onChildError(BaseEvent event, Throwable e) {
+        error(e);
+    }
 }

@@ -1,6 +1,5 @@
-package com.acap.ec.internal;
+package com.acap.ec;
 
-import com.acap.ec.BaseEvent;
 import com.acap.ec.action.Apply;
 
 /**

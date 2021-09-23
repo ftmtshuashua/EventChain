@@ -27,7 +27,7 @@ public class OnEventLogListener<P, R> implements OnEventListener<P, R> {
 
     @Override
     public void onError(Throwable e) {
-        System.err.println(String.format("%s:onError(%s)", mTag, e));
+        System.out.println(String.format("%s:onError(%s)", mTag, e));
     }
 
     @Override

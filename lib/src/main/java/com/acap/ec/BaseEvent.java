@@ -1,8 +1,8 @@
 package com.acap.ec;
 
 import com.acap.ec.action.Apply;
-import com.acap.ec.internal.ApplyEvent;
 import com.acap.ec.internal.ListenerMap;
+import com.acap.ec.internal.State;
 import com.acap.ec.listener.OnEventListener;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +19,7 @@ import java.util.List;
  */
 public abstract class BaseEvent<P, R> implements Event<P, R> {
 
-    private boolean mIsComplete = false;
+    private State mState = State.WAIT;
 
     private final ListenerMap<OnEventListener<P, R>> mListener = new ListenerMap<>();
 
@@ -35,75 +35,35 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
         mChain = chain;
     }
 
-    @Override
-    public final void finish(boolean isComplete) {
-        if (mChain != null) {
-            mChain.finish(isComplete);
-        } else {
-            onFinish(isComplete);
+    // 状态设置
+    private final void setState(State state) {
+        synchronized (mState) {
+            mState = state;
         }
     }
 
-    /**
-     * 当用户在链上调用了 {@link BaseEvent#finish(boolean)} ,处于整条链上的所有事件的 {@link BaseEvent#onFinish(boolean)} 方法都将被依次调用
-     *
-     * @param isComplete 是否调用事件的 {@link OnEventListener#onComplete()} 回调
-     */
-    protected void onFinish(boolean isComplete) {
-        dispatchEventComplete(isComplete);
-    }
-
-    /**
-     * 判断当前事件是否已完成。已完成的事件将无法执行动作
-     *
-     * @return 是否完成
-     */
-    protected synchronized boolean isComplete() {
-        return mIsComplete;
-    }
-
-    /**
-     * 分发事件完成状态
-     *
-     * @param isComplete
-     */
-    protected synchronized final void dispatchEventComplete(boolean isComplete) {
-        if (!isComplete()) {
-            boolean isCallCompleteListener = false;
-            synchronized (this) {
-                if (!isComplete()) {
-                    isCallCompleteListener = true;
-                    mIsComplete = true;
+    // 检查是否允许开始,并执行开始,该状态会在第一次检查时变更
+    private final boolean isStartAble() {
+        if (mState.IS_START_ABLE) {
+            boolean isCall = false;
+            synchronized (mState) {
+                if (mState.IS_START_ABLE) {
+                    isCall = true;
+                    setState(State.START);
                 }
             }
-
-            if (isCallCompleteListener) {
-                onComplete();
-                if (isComplete) {
-                    mListener.map(OnEventListener::onComplete);
-
-                    if (mChain != null) {
-                        mChain.onChildComplete(this);
-                    }
-                }
-            }
-
-
+            return isCall;
         }
-    }
-
-    /**
-     * 当前事件完成时回调该方法,事件可以在这里做一个资源回收等操作
-     */
-    protected void onComplete() {
-
+        return false;
     }
 
     @Override
-    public void start(P params) {
-        if (!isComplete()) {
+    public final void start(P params) {
+        if (isStartAble()) {
             mListener.map(listener -> listener.onStart(this, params));
             onCall(params);
+        } else {
+            throw new IllegalStateException("Already executed.");
         }
     }
 
@@ -116,14 +76,83 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
     protected abstract void onCall(P params);
 
 
+    private final boolean isCompleteAble() {
+        if (mState.IS_START) {
+            boolean isCall = false;
+            synchronized (mState) {
+                if (mState.IS_START) {
+                    isCall = true;
+                    setState(State.COMPLETE);
+                }
+            }
+            return isCall;
+        }
+        return false;
+    }
+
+    @Override
+    public final void finish(boolean isComplete) {
+        if (mChain != null) {
+            mChain.finish(isComplete);
+        } else {
+            onFinish(isComplete);
+            finishMySelf(isComplete);
+        }
+    }
+
+    /**
+     * 当用户在链上调用了 {@link BaseEvent#finish(boolean)} ,处于整条链上的所有事件的 {@link BaseEvent#onFinish(boolean)} 方法都将被依次调用<br/>
+     *
+     * @param isComplete 是否调用事件的 {@link OnEventListener#onComplete()} 回调
+     */
+    protected void onFinish(boolean isComplete) {
+    }
+
+    /**
+     * 分发事件完成状态
+     *
+     * @param isComplete
+     */
+    protected final void finishMySelf(boolean isComplete) {
+        if (isCompleteAble()) {
+            onComplete();
+            if (isComplete) {
+                mListener.map(OnEventListener::onComplete);
+            }
+        }
+    }
+
+
+    /**
+     * 当前事件完成时回调该方法,事件可以在这里做一个资源回收等操作
+     */
+    protected void onComplete() {
+
+    }
+
+    //完成自己
+    private final void completeMySelf() {
+        onComplete();
+        mListener.map(OnEventListener::onComplete);
+    }
+
+    /**
+     * 向后传递 Null 结果
+     */
+    protected void next() {
+        next(null);
+    }
+
     /**
      * 将当前事件的执行结果向后传递
      *
      * @param result 当前事件的执行结果
      */
     protected void next(R result) {
-        if (!isComplete()) {
+        if (isCompleteAble()) {
             mListener.map(listener -> listener.onNext(result));
+
+            completeMySelf();
 
             if (mChain != null) {
                 mChain.onChildNext(this, result);
@@ -137,18 +166,15 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
      * @param e 发生的错误信息
      */
     protected void error(Throwable e) {
-        if (!isComplete()) {
+        if (isCompleteAble()) {
             mListener.map(listener -> listener.onError(e));
 
-            finish(true);
-        }
-    }
+            completeMySelf();
 
-    /**
-     * 当前事件执行完成.注意已执行完成的事件将不再接收与发出任何参数
-     */
-    protected void complete() {
-        dispatchEventComplete(true);
+            if (mChain != null) {
+                mChain.onChildError(this, e);
+            }
+        }
     }
 
     @Override

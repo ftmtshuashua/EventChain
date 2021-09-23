@@ -126,7 +126,7 @@ public interface Event<P, R> {
      * 停止链上正在执行的逻辑.它会立即事件的{@link BaseEvent#onFinish(boolean)}方法,给与事件一个进行资源回收的时机<br/>
      * 该操作对处于相同链上的所有事件生效
      *
-     * @param isComplete 用于控制是否执行{@link BaseEvent#dispatchEventComplete(boolean)} ()}的逻辑
+     * @param isComplete 用于控制是否执行{@link BaseEvent#finishMySelf(boolean)} ()}的逻辑
      */
     void finish(boolean isComplete);
 

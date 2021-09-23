@@ -1,4 +1,4 @@
-package com.acap.demo;
+package com.acap.demo.event;
 
 import com.acap.demo.utils.Utils;
 import com.acap.ec.BaseEvent;
@@ -11,7 +11,7 @@ import com.acap.ec.BaseEvent;
  * Created by A·Cap on 2021/9/22 9:48
  * </pre>
  */
-public class TestEvent<P, R> extends BaseEvent<P, R> {
+public class TestEvent<P, R> extends DemoEvent<P, R> {
 
     private R mResult;
 
@@ -28,6 +28,5 @@ public class TestEvent<P, R> extends BaseEvent<P, R> {
         }
         System.out.println(String.format("%s : %s -> %s", Utils.id(this), params, mResult));
         next(mResult);
-        complete();
     }
 }

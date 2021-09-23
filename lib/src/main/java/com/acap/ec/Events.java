@@ -1,7 +1,6 @@
 package com.acap.ec;
 
 import com.acap.ec.action.Apply;
-import com.acap.ec.internal.ApplyEvent;
 
 import org.jetbrains.annotations.NotNull;
 

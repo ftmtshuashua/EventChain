@@ -29,8 +29,7 @@ USE
 ```
 class SimperEvent() : BaseEvent<Int, Int>() {
     override fun onCall(params: Int) {
-        val result = params * params
-        next(result)
+        next(params * params)
     }
 }
 
