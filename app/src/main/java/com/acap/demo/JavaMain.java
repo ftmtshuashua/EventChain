@@ -13,6 +13,7 @@ import com.acap.ec.listener.OnEventLogListener;
  * Created by ACap on 2021/7/9 21:29
  * </pre>
  */
+@SuppressWarnings("unchecked")
 class JavaMain {
 
     private static Event<Integer, ?> mEvent = null;

@@ -54,6 +54,7 @@ public final class Chain<P, R, R1> extends BaseEvent<P, R1> {
      * @param event  发起 {@link BaseEvent#next(Object)} 的事件
      * @param result 该事件的处理结果
      */
+    @SuppressWarnings("unchecked")
     protected final void onChildNext(BaseEvent event, Object result) {
         if (mHead == event) {
             mTail.start((R) result);

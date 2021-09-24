@@ -28,7 +28,7 @@ public final class Events {
      * @return 普通事件
      */
     public static final <P, R> Event<P, R> create(@NotNull Apply<P, R> apply) {
-        return new ApplyEvent(apply);
+        return new ApplyEvent<P, R>(apply);
     }
 
     /**
@@ -51,6 +51,7 @@ public final class Events {
      * @param <R>    事件的执行结果
      * @return 并发事件
      */
+    @SuppressWarnings("unchecked")
     public static final <P, R> Event<P, List<R>> merge(@NotNull Event<? super P, ? extends R>... events) {
         return new MergeEvent(events);
     }

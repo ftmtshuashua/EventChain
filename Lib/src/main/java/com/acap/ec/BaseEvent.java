@@ -183,6 +183,7 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <R1> Event<P, List<R1>> merge(Event<? super R, ? extends R1>... events) {
         return Events.chain(this, Events.merge(events));
     }

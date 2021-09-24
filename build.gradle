@@ -21,6 +21,13 @@ allprojects {
     tasks.withType(Javadoc) {
         options { encoding "UTF-8" charSet 'UTF-8' links "http://docs.oracle.com/javase/7/docs/api" }
     }
+
+
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
 }
 
 task clean(type: Delete) {

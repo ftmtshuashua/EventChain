@@ -23,7 +23,7 @@ public class LazyEvent<P, R> extends BaseEvent<P, R> {
     @Override
     protected void onCall(P params) {
         apply = mLazy.apply(params);
-        apply.listener(new ProxyEventListener(mListener));
+        apply.listener(new ProxyEventListener<>(mListener));
         apply.start(params);
     }
 

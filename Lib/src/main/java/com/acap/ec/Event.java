@@ -41,6 +41,7 @@ public interface Event<P, R> {
      * @param <R1>   从事件集中统计出来的结果。并且输出的结果的顺序，与事件集的顺序相同
      * @return 并发逻辑事件
      */
+    @SuppressWarnings("unchecked")
     <R1> Event<P, List<R1>> merge(@NotNull Event<? super R, ? extends R1>... events);
 
     /**

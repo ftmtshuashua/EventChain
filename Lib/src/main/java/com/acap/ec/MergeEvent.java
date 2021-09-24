@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by A·Cap on 2021/9/18 17:28
  * </pre>
  */
+@SuppressWarnings("unchecked")
 public class MergeEvent<P, R> extends BaseEvent<P, List<R>> {
 
     private Event<P, R>[] mEvents;
