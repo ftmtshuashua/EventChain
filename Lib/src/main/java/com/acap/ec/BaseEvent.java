@@ -19,7 +19,32 @@ import java.util.List;
  */
 public abstract class BaseEvent<P, R> implements Event<P, R> {
 
-    private State mState = State.WAIT;
+    private volatile EventState mState = new EventState();
+
+    private static final class EventState {
+        private State mState = State.WAIT;
+
+        private synchronized void setState(State state) {
+            mState = state;
+        }
+
+        // 检查是否允许开始,并执行开始,该状态会在第一次检查时变更
+        synchronized boolean isStartAble() {
+            if (mState.IS_START_ABLE) {
+                setState(State.START);
+                return true;
+            }
+            return false;
+        }
+
+        synchronized boolean isCompleteAble() {
+            if (mState.IS_START) {
+                setState(State.COMPLETE);
+                return true;
+            }
+            return false;
+        }
+    }
 
     private final ListenerMap<OnEventListener<P, R>> mListener = new ListenerMap<>();
 
@@ -35,31 +60,9 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
         mChain = chain;
     }
 
-    // 状态设置
-    private final void setState(State state) {
-        synchronized (mState) {
-            mState = state;
-        }
-    }
-
-    // 检查是否允许开始,并执行开始,该状态会在第一次检查时变更
-    private final boolean isStartAble() {
-        if (mState.IS_START_ABLE) {
-            boolean isCall = false;
-            synchronized (mState) {
-                if (mState.IS_START_ABLE) {
-                    isCall = true;
-                    setState(State.START);
-                }
-            }
-            return isCall;
-        }
-        return false;
-    }
-
     @Override
     public final void start(P params) {
-        if (isStartAble()) {
+        if (mState.isStartAble()) {
             mListener.map(listener -> listener.onStart(this, params));
             onCall(params);
         } else {
@@ -75,20 +78,6 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
      */
     protected abstract void onCall(P params);
 
-
-    private final boolean isCompleteAble() {
-        if (mState.IS_START) {
-            boolean isCall = false;
-            synchronized (mState) {
-                if (mState.IS_START) {
-                    isCall = true;
-                    setState(State.COMPLETE);
-                }
-            }
-            return isCall;
-        }
-        return false;
-    }
 
     @Override
     public final void finish(boolean isComplete) {
@@ -114,7 +103,7 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
      * @param isComplete
      */
     protected final void finishMySelf(boolean isComplete) {
-        if (isCompleteAble()) {
+        if (mState.isCompleteAble()) {
             onComplete();
             if (isComplete) {
                 mListener.map(OnEventListener::onComplete);
@@ -149,13 +138,17 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
      * @param result 当前事件的执行结果
      */
     protected void next(R result) {
-        if (isCompleteAble()) {
-            mListener.map(listener -> listener.onNext(result));
+        if (mState.isCompleteAble()) {
+            try {
+                mListener.map(listener -> listener.onNext(result));
 
-            completeMySelf();
+                completeMySelf();
 
-            if (mChain != null) {
-                mChain.onChildNext(this, result);
+                if (mChain != null) {
+                    mChain.onChildNext(this, result);
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
             }
         }
     }
@@ -166,13 +159,17 @@ public abstract class BaseEvent<P, R> implements Event<P, R> {
      * @param e 发生的错误信息
      */
     protected void error(Throwable e) {
-        if (isCompleteAble()) {
-            mListener.map(listener -> listener.onError(e));
+        if (mState.isCompleteAble()) {
+            try {
+                mListener.map(listener -> listener.onError(e));
 
-            completeMySelf();
+                completeMySelf();
 
-            if (mChain != null) {
-                mChain.onChildError(this, e);
+                if (mChain != null) {
+                    mChain.onChildError(this, e);
+                }
+            } catch (Throwable e1) {
+                e1.printStackTrace();
             }
         }
     }
